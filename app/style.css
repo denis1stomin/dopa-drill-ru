@@ -298,10 +298,11 @@ body.lv9 .card { box-shadow: 0 7px 0 var(--ink), 0 0 0 5px var(--pink), 0 0 40px
 .pad button.del { background: var(--pink-soft); font-size: 24px; }
 .pad button.press { transform: translateY(4px) scale(.97); box-shadow: 0 1px 0 var(--ink); }
 body.lv4 .pad button { --bounce: 1; }
-body.lv4 .pad button[data-key="7"], body.lv4 .pad button[data-key="3"] { background: #ffe3ef; }
-body.lv4 .pad button[data-key="8"], body.lv4 .pad button[data-key="4"] { background: #fff4c7; }
-body.lv4 .pad button[data-key="9"], body.lv4 .pad button[data-key="5"], body.lv4 .pad button[data-key="1"] { background: #e3ebff; }
-body.lv4 .pad button[data-key="6"], body.lv4 .pad button[data-key="2"], body.lv4 .pad button[data-key="0"] { background: #dcfaef; }
+/* Diagonal colour stripes, laid out for the phone keypad order (1-2-3 on top). */
+body.lv4 .pad button[data-key="1"], body.lv4 .pad button[data-key="9"] { background: #ffe3ef; }
+body.lv4 .pad button[data-key="2"], body.lv4 .pad button[data-key="4"] { background: #fff4c7; }
+body.lv4 .pad button[data-key="3"], body.lv4 .pad button[data-key="5"], body.lv4 .pad button[data-key="7"] { background: #e3ebff; }
+body.lv4 .pad button[data-key="6"], body.lv4 .pad button[data-key="8"], body.lv4 .pad button[data-key="0"] { background: #dcfaef; }
 body.lv8 .pad button { box-shadow: 0 5px 0 var(--ink), 0 0 calc(var(--kick) * 18px) rgba(255, 210, 63, .9); }
 .pad button:disabled { opacity: .5; }
 
