@@ -699,6 +699,9 @@ function celebrate(E, big, lastBasic) {
   tween(260, (k) => { card.style.transform = `scale(${1 + Math.sin(k * Math.PI) * 0.04 * E})`; }).then(() => { card.style.transform = ''; });
 }
 
+// Correct-answer marks are green in the Russian edition (red reads as "wrong" here).
+const OK_COLOR = '#22b35e';
+
 // Hand-drawn "hanamaru" (flower circle) mark, the classic Japanese school "correct".
 function hanamaru(E, el = $('#stamp'), style = ul.variant(S.look && S.look.mark)) {
   if (style !== 'hanamaru' && MARKS[style]) { drawMark(el, style, E, { preview: el.id !== 'stamp' }); return; }
@@ -714,7 +717,7 @@ function hanamaru(E, el = $('#stamp'), style = ul.variant(S.look && S.look.mark)
     const m = [(Math.cos((a0 + a1) / 2)) * R * 1.12, (Math.sin((a0 + a1) / 2)) * R * 1.12];
     petals += `${i ? '' : `M${p0[0].toFixed(1)} ${p0[1].toFixed(1)}`}Q${m[0].toFixed(1)} ${m[1].toFixed(1)} ${p1[0].toFixed(1)} ${p1[1].toFixed(1)}`;
   }
-  const stroke = E > 0.85 ? 'url(#rb)' : '#ff4f6d';
+  const stroke = E > 0.85 ? 'url(#rb)' : OK_COLOR;
   el.style.cssText = `width:${size}px;height:${size}px;border:none;box-shadow:none;opacity:1;right:${flower ? 6 : 14}px;top:${flower ? 18 : 34}px`;
   el.innerHTML = `<svg viewBox="-70 -70 140 140" width="100%" height="100%"><defs><linearGradient id="rb" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#ff4f6d"/><stop offset=".35" stop-color="#ffb000"/><stop offset=".65" stop-color="#3fdcb0"/><stop offset="1" stop-color="#3b6bff"/></linearGradient></defs>
     <path class="sp" d="${spiral}" fill="none" stroke="${stroke}" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -751,7 +754,7 @@ const MARKS = {
 };
 function drawMark(el, style, E, { preview = false } = {}) {
   const size = preview ? 120 : 110 + 50 * Math.min(1, E);
-  const col = E > 0.85 ? 'url(#mk-rb)' : '#ff4f6d';
+  const col = E > 0.85 ? 'url(#mk-rb)' : OK_COLOR;
   el.style.cssText = `width:${size}px;height:${size}px;border:none;box-shadow:none;opacity:1;${preview ? '' : `right:${E >= 0.45 ? 6 : 14}px;top:${E >= 0.45 ? 18 : 34}px`}`;
   el.innerHTML = `<svg viewBox="-72 -72 144 144" width="100%" height="100%" overflow="visible"><defs><linearGradient id="mk-rb" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#ff4f6d"/><stop offset=".35" stop-color="#ffb000"/><stop offset=".65" stop-color="#3fdcb0"/><stop offset="1" stop-color="#3b6bff"/></linearGradient></defs>${MARKS[style](col)}</svg>`;
   const sp = [...el.querySelectorAll('.sp')]; const fl = [...el.querySelectorAll('.fl')];
@@ -1873,7 +1876,7 @@ const cal = { y: new Date().getFullYear(), m: new Date().getMonth(), seen: new S
 const MODE_NAMES = { drill: (h) => `Тренажёр ${h.count || ''}`, level: () => 'Мой уровень', grade: (h) => `${h.grade} класс`, review: () => 'Работа над ошибками', practice: (h) => `Тренировка (${SKILL[h.skill]?.name || ''})` };
 const stampSvg = (score) => {
   const gold = score > 100;
-  const col = gold ? '#ffb000' : '#ff4f6d';
+  const col = gold ? '#ffb000' : '#1f3fbf'; // deep blue: red reads as "wrong" in Russian schools
   return `<svg viewBox="-20 -20 40 40" aria-hidden="true"><path d="M-2 -15 C10 -16 16 -6 14 4 C12 13 1 17 -8 13 C-16 9 -16 -4 -8 -11 C-3 -15 5 -14 9 -10" fill="none" stroke="${col}" stroke-width="3" stroke-linecap="round"/>${gold ? '<path d="M0 -19 l2 4 4 .5 -3 3 .8 4 -3.8 -2 -3.8 2 .8 -4 -3 -3 4 -.5z" fill="#ffd23f" stroke="#1b1d4d" stroke-width="1"/>' : ''}</svg>`;
 };
 function renderCalendar(animateNew = false) {
@@ -2162,7 +2165,7 @@ const CROWD_THUMB = { classic: ['blue', 'yellow', 'mint'], costume: ['blue', 'ye
 function itemThumb(it) {
   const v = ul.variant(it.id);
   if (it.cat === 'bg') return `<span class="th-bg" style="background:${BG_THUMB[v] || BG_THUMB.classic}"></span>`;
-  if (it.cat === 'mark') return v === 'hanamaru' ? '<svg viewBox="-70 -70 140 140"><path d="M-2 -52 C38 -56 56 -20 50 14 C44 46 4 60 -28 46 C-56 32 -56 -14 -28 -38 C-10 -52 18 -48 32 -34" fill="none" stroke="#ff4f6d" stroke-width="9" stroke-linecap="round"/></svg>' : `<svg viewBox="-72 -72 144 144" overflow="visible">${MARKS[v]('#ff4f6d')}</svg>`;
+  if (it.cat === 'mark') return v === 'hanamaru' ? '<svg viewBox="-70 -70 140 140"><path d="M-2 -52 C38 -56 56 -20 50 14 C44 46 4 60 -28 46 C-56 32 -56 -14 -28 -38 C-10 -52 18 -48 32 -34" fill="none" stroke="#22b35e" stroke-width="9" stroke-linecap="round"/></svg>' : `<svg viewBox="-72 -72 144 144" overflow="visible">${MARKS[v](OK_COLOR)}</svg>`;
   if (it.cat === 'particle') return `<svg viewBox="-20 -20 40 40">${PT_THUMB[v] || PT_THUMB.classic}</svg>`;
   if (it.cat === 'music') return `<span class="th-music"><svg viewBox="-20 -20 40 40"><path d="M-6 10 V-14 L12 -18 V6" fill="none" stroke="#1b1d4d" stroke-width="3" stroke-linejoin="round"/><ellipse cx="-11" cy="11" rx="6.5" ry="5" fill="${{ classic: '#3fdcb0', chip: '#8fb4ff', matsuri: '#ff4f6d', brass: '#ffd23f', electro: '#a77bff' }[v] || '#3fdcb0'}" stroke="#1b1d4d" stroke-width="2.4"/><ellipse cx="7" cy="7" rx="6.5" ry="5" fill="${{ classic: '#3fdcb0', chip: '#8fb4ff', matsuri: '#ff4f6d', brass: '#ffd23f', electro: '#a77bff' }[v] || '#3fdcb0'}" stroke="#1b1d4d" stroke-width="2.4"/></svg></span>`;
   if (it.cat === 'costume') return dopakichiSVG('pink', v === 'none' ? null : v);
