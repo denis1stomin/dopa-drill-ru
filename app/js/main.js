@@ -16,6 +16,7 @@ import * as qs from './quests.js';
 import * as tr from './trophies.js';
 import * as ul from './unlocks.js';
 import { BASIC_SCORE, extraPoints, basicDopaL, extraProblemGain, addDopa, comboMult, comboMaxed, comboWindowMs, comboMilestone, fmtDopa, unitOf, unitLabel } from './scoring.js';
+import { plural, W, n as pn, MONTHS, date as ruDate } from './ru.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -162,8 +163,8 @@ function questRows(list) {
   }).join('');
 }
 function questRewardText(q) {
-  if (q.rewarded) return '<b class="qdone">コンプリート！</b>';
-  return `ぜんぶで <i class="qham">${HAMMER_SVG}</i>+1`;
+  if (q.rewarded) return '<b class="qdone">Всё выполнено!</b>';
+  return `за все: <i class="qham">${HAMMER_SVG}</i>+1`;
 }
 function renderQuests() {
   const q = quests();
@@ -177,7 +178,7 @@ function renderQuestMini(el) {
   const q = quests();
   const got = S.questReward;
   S.questReward = null;
-  el.innerHTML = `<p class="qm-head">きょうの クエスト <span>${questRewardText(q)}</span></p><ol class="quest-list">${questRows(q.list)}</ol>${got ? `<p class="qm-got">${got.hammer ? `<i class="qham">${HAMMER_SVG}</i>ノーカンハンマーを 1本 もらったよ！` : 'ハンマーは もう いっぱい！ おいわいだけ するよ'}</p>` : ''}`;
+  el.innerHTML = `<p class="qm-head">Задания на сегодня <span>${questRewardText(q)}</span></p><ol class="quest-list">${questRows(q.list)}</ol>${got ? `<p class="qm-got">${got.hammer ? `<i class="qham">${HAMMER_SVG}</i>Держи молоток «Не в счёт»!` : 'Молотков уже максимум! Просто празднуем'}</p>` : ''}`;
   if (got && !S.reduced) setTimeout(() => { const c = centerOf(el); fx.burst(c.x, c.y, { count: 50, kinds: ['star', 'confetti', 'coin'], speed: 600, up: 180 }); audio.unit(0.7); popEl(el, 0.12, 400); }, 900);
 }
 // A small banner at the top of the screen; it never covers the problem or the keypad.
@@ -185,7 +186,7 @@ function questPop(q) {
   audio.play('coin', audio.now(), { v: 0.12, m: 88 });
   const el = document.createElement('div');
   el.className = `quest-pop${q ? '' : ' all'}`;
-  el.innerHTML = q ? `<b>クエスト クリア！</b><span>${qs.questText(q)}</span>` : '<b>クエスト コンプリート！</b>';
+  el.innerHTML = q ? `<b>Задание выполнено!</b><span>${qs.questText(q)}</span>` : '<b>Все задания выполнены!</b>';
   $('#cutins').appendChild(el);
   const y = Math.max(8, $('#app').getBoundingClientRect().top + 6);
   el.style.top = `${y}px`;
@@ -198,7 +199,7 @@ function questPop(q) {
   })();
 }
 const REVIEW_MAX = 40;
-const MODE_LABEL = { level: 'じぶんレベル', grade: (g) => `${g}ねんせい`, review: 'ふくしゅう', practice: 'れんしゅう', drill: 'ドリル' };
+const MODE_LABEL = { level: 'Мой уровень', grade: (g) => `${g} класс`, review: 'Работа над ошибками', practice: 'Тренировка', drill: 'Тренажёр' };
 
 // kind: 'level' | 'grade' | 'review' | 'practice' | 'drill'
 function makePlan(kind, arg) {
@@ -255,8 +256,9 @@ function renderSheet(p) {
   S.cells = {}; S.lines = {};
   if (p.bracket) {
     const b = document.createElement('div');
-    b.className = 'bracket';
-    b.style.gridRow = `${p.bracket.r + 1}`;
+    // Russian long division draws a corner around the divisor and the quotient.
+    b.className = p.bracket.corner ? 'corner' : 'bracket';
+    b.style.gridRow = p.bracket.corner ? `${p.bracket.r + 1} / span 2` : `${p.bracket.r + 1}`;
     b.style.gridColumn = `${p.bracket.c0 + 1} / ${p.bracket.c1 + 2}`;
     sheet.appendChild(b);
   }
@@ -273,10 +275,10 @@ function renderSheet(p) {
     d.className = `cell ${c.kind}${c.small ? ' small' : ''}${c.cls ? ` ${c.cls}` : ''}`;
     d.style.gridRow = c.rs ? `${c.r + 1} / span ${c.rs}` : `${c.r + 1}`;
     d.style.gridColumn = c.cs ? `${c.c + 1} / span ${c.cs}` : `${c.c + 1}`;
-    if (c.kind === 'input') { d.textContent = ''; d.setAttribute('aria-label', '入力欄'); }
+    if (c.kind === 'input') { d.textContent = ''; d.setAttribute('aria-label', 'поле ввода'); }
     else if (c.kind === 'auto' || c.kind === 'carry') { d.textContent = c.text; d.classList.add('hidden'); }
     else d.textContent = c.text;
-    if (c.text === '.' && c.kind === 'auto') d.classList.add('dot');
+    if (c.text === ',' && c.kind === 'auto') d.classList.add('dot');
     sheet.appendChild(d);
     S.cells[c.id] = d;
     d.dataset.id = c.id;
@@ -339,7 +341,7 @@ function startGame(kind = 'level', arg) {
   S.dopa = { L: 0, shown: 0, unit: '' };
   S.extra = { score: 0, solved: 0, misses: 0, end: 0, over: false };
   S.targetMs = Math.ceil((S.N * 18) / 10) * 10 * 1000;
-  $('#clock-label').textContent = `目標 ${fmtTime(S.targetMs)}`;
+  $('#clock-label').textContent = `цель ${fmtTime(S.targetMs)}`;
   $('.clock').classList.remove('over', 'extra', 'hurry');
   $('#ok-total').textContent = `/${S.N}`;
   const pips = $('#pips');
@@ -379,7 +381,7 @@ async function setupProblem() {
   S.step = 0; S.wrongInQ = false; S.shownWrong = null;
   $$('.pip').forEach((pp, i) => pp.classList.toggle('now', !extra && i === S.qi));
   $('#qtitle').textContent = p.title;
-  $('#qno').textContent = extra ? `EX ${S.extra.solved + 1}` : `第${S.qi + 1}問`;
+  $('#qno').textContent = extra ? `EX ${S.extra.solved + 1}` : `Пример ${S.qi + 1}`;
   renderSheet(p);
   $('#step-label').innerHTML = '&nbsp;';
   const last = !extra && S.qi === S.N - 1;
@@ -390,7 +392,7 @@ async function setupProblem() {
     await capsuleIntro(p.capsule);
     if (S.screen !== 'play' || run !== S.run) return;
     const st = store.load(); st.capsule = { ...(st.capsule || {}), lastDay: store.dayKey() }; store.save();
-  } else if (E > 0.22 || extra) cutin(extra ? `EX ${S.extra.solved + 1}` : last ? 'ラスト1問' : `第${S.qi + 1}問`, E);
+  } else if (E > 0.22 || extra) cutin(extra ? `EX ${S.extra.solved + 1}` : last ? 'Последний!' : `Пример ${S.qi + 1}`, E);
   await cardEnter(E);
   if (S.screen !== 'play' || run !== S.run) return;
   S.ready = true;
@@ -573,7 +575,7 @@ function giveHelp(st) {
   els.forEach((el) => el.classList.add('hint-glow'));
   if (els[0] && !S.reduced) setTimeout(() => hero.point(centerOf(els[0])), 900);
   if (n >= 3) {
-    $('#step-label').innerHTML = `<b>${st.label}</b><span class="help-text">ヒント　${st.help.text}</span>`;
+    $('#step-label').innerHTML = `<b>${st.label}</b><span class="help-text">Подсказка: ${st.help.text}</span>`;
     audio.play('blip', audio.now(), { m: 81, v: 0.08 });
   }
 }
@@ -620,7 +622,7 @@ function announceUnlock(id) {
   setTimeout(() => {
     audio.unit(Math.min(1, S.E + 0.3));
     if (S.reduced) return;
-    cutin(`かいほう！ ${name}`, Math.max(0.6, S.E));
+    cutin(`Открыто: ${name}`, Math.max(0.6, S.E));
     const r = stage.getBoundingClientRect();
     fx.burst(r.left + r.width / 2, r.top + r.height * 0.4, { count: 40, kinds: ['star', 'confetti', 'coin'], speed: 700, up: 200 });
   }, 700);
@@ -742,7 +744,7 @@ function hanamaru(E, el = $('#stamp'), style = ul.variant(S.look && S.look.mark)
 // Correct marks other than the hanamaru. Stroked parts ("sp") are drawn in,
 // filled parts ("fl") pop in after; all grow with E and turn rainbow near the top.
 const MARKS = {
-  stamp: (c) => `<circle class="sp" r="56" fill="none" stroke="${c}" stroke-width="8"/><circle class="sp" r="45" fill="none" stroke="${c}" stroke-width="2.8"/><text class="fl" y="9" text-anchor="middle" font-family="Dela Gothic One, sans-serif" font-size="24" fill="${c}" transform="rotate(-12)">せいかい</text><path class="fl" d="M-30 -30 l3 6 6 1 -4.5 4 1 6.5 -5.5 -3 -5.5 3 1 -6.5 -4.5 -4 6 -1z M30 26 l3 6 6 1 -4.5 4 1 6.5 -5.5 -3 -5.5 3 1 -6.5 -4.5 -4 6 -1z" fill="${c}"/>`,
+  stamp: (c) => `<circle class="sp" r="56" fill="none" stroke="${c}" stroke-width="8"/><circle class="sp" r="45" fill="none" stroke="${c}" stroke-width="2.8"/><text class="fl" y="9" text-anchor="middle" font-family="Dela Gothic One, sans-serif" font-size="19" fill="${c}" transform="rotate(-12)">ВЕРНО</text><path class="fl" d="M-30 -30 l3 6 6 1 -4.5 4 1 6.5 -5.5 -3 -5.5 3 1 -6.5 -4.5 -4 6 -1z M30 26 l3 6 6 1 -4.5 4 1 6.5 -5.5 -3 -5.5 3 1 -6.5 -4.5 -4 6 -1z" fill="${c}"/>`,
   crown: (c) => `<path class="sp" d="M-50 30 L-58 -28 L-26 -2 L0 -46 L26 -2 L58 -28 L50 30 Z" fill="none" stroke="${c}" stroke-width="7" stroke-linejoin="round"/><path class="fl" d="M-50 30 L-58 -28 L-26 -2 L0 -46 L26 -2 L58 -28 L50 30 Z" fill="#ffd23f" opacity=".85"/><path class="sp" d="M-48 44 L48 44" stroke="${c}" stroke-width="7" stroke-linecap="round"/><circle class="fl" cx="0" cy="-46" r="7" fill="#ff4f6d"/><circle class="fl" cx="-58" cy="-28" r="6" fill="#3b6bff"/><circle class="fl" cx="58" cy="-28" r="6" fill="#3fdcb0"/><circle class="fl" cx="0" cy="12" r="9" fill="#ff7ab6"/>`,
   ring: (c) => `${Array.from({ length: 12 }, (_, i) => { const a = (i / 12) * Math.PI * 2; return `<path class="sp" d="M${(Math.cos(a) * 20).toFixed(1)} ${(Math.sin(a) * 20).toFixed(1)} L${(Math.cos(a) * 52).toFixed(1)} ${(Math.sin(a) * 52).toFixed(1)}" stroke="${['#ff4f6d', '#ffb000', '#3fdcb0', '#3b6bff'][i % 4]}" stroke-width="7" stroke-linecap="round"/>`; }).join('')}${Array.from({ length: 12 }, (_, i) => { const a = ((i + 0.5) / 12) * Math.PI * 2; return `<circle class="fl" cx="${(Math.cos(a) * 60).toFixed(1)}" cy="${(Math.sin(a) * 60).toFixed(1)}" r="5" fill="${c}"/>`; }).join('')}<circle class="fl" r="12" fill="#ffd23f"/>`,
   medal: (c) => `<path class="fl" d="M-30 -66 L-8 -18 L8 -18 L-14 -66Z" fill="#3b6bff"/><path class="fl" d="M30 -66 L8 -18 L-8 -18 L14 -66Z" fill="#ff4f6d"/><circle class="sp" cy="18" r="40" fill="none" stroke="${c}" stroke-width="8"/><circle class="fl" cy="18" r="34" fill="#ffd23f"/><path class="sp" d="M0 -6 L7 9 L23 10 L11 21 L15 37 L0 28 L-15 37 L-11 21 L-23 10 L-7 9Z" fill="none" stroke="${c}" stroke-width="5" stroke-linejoin="round"/>`,
@@ -773,7 +775,7 @@ function drawMark(el, style, E, { preview = false } = {}) {
   });
 }
 
-// The look of one play: fixed choices stay, "おまかせ" changes every play.
+// The look of one play: fixed choices stay, "random" changes every play.
 const equipState = () => { const st = store.load(); if (!st.equip) st.equip = ul.defaultEquip(); return st.equip; };
 const gotTrophies = () => trophyState().got || {};
 S.look = null;
@@ -789,7 +791,7 @@ function applyLook(look) {
   // The crowd is rebuilt with the new style the next time it is needed.
   while (crowd.length) { const m = crowd.pop(); m.destroy(); actors.splice(actors.indexOf(m), 1); }
 }
-// On the title only fixed choices show; "おまかせ" shows the original look.
+// On the title only fixed choices show; "random" shows the original look.
 function titleLook() {
   const eq = equipState(); const got = gotTrophies();
   return Object.fromEntries(ul.CATS.map(({ key }) => { const id = eq[key]; return [key, id && id !== 'auto' && ul.isUnlocked(ul.ITEM[id], got) ? id : ul.ITEMS.find((it) => it.cat === key && it.base).id]; }));
@@ -867,7 +869,7 @@ function addCombo() {
   audio.unit(Math.min(1, 0.3 + S.combo / 100));
   if (S.reduced) return;
   const c = centerOf(box);
-  fx.text(c.x, c.y + 26, `${S.combo}コンボ！`, { color: '#ffd23f', size: 26 + Math.min(20, S.combo / 5), vy: -90, life: 1 });
+  fx.text(c.x, c.y + 26, `${S.combo} комбо!`, { color: '#ffd23f', size: 26 + Math.min(20, S.combo / 5), vy: -90, life: 1 });
   fx.burst(c.x, c.y, { count: 16 + Math.min(40, S.combo / 2), kinds: ['star', 'spark', 'confetti'], speed: 380, up: 80 });
   fx.ring(c.x, c.y, { color: '#ff7ab6', radius: 50 + Math.min(80, S.combo), width: 6 });
 }
@@ -880,7 +882,7 @@ function breakCombo(timeout = false) {
   audio.play('blip', audio.now(), { m: 60, v: 0.07 });
   if (S.reduced) return;
   const c = centerOf(box);
-  fx.text(c.x, c.y + 20, timeout ? `${had}コンボ おわり` : `${had}コンボ`, { color: '#b9bbd9', size: 15, vy: 40, life: 0.8 });
+  fx.text(c.x, c.y + 20, timeout ? `комбо ${had} — всё` : `комбо ${had}`, { color: '#b9bbd9', size: 15, vy: 40, life: 0.8 });
 }
 function showCombo() {
   const box = $('#combo-box');
@@ -889,7 +891,7 @@ function showCombo() {
   if (!on) return;
   $('#combo').textContent = S.combo;
   const max = comboMaxed(S.combo);
-  $('#combo-mult').textContent = max ? 'ドパ×2 MAX' : `ドパ×${comboMult(S.combo).toFixed(2)}`;
+  $('#combo-mult').textContent = max ? 'Допа ×2 MAX' : `Допа ×${comboMult(S.combo).toFixed(2)}`;
   box.classList.toggle('hot', max);
 }
 function tickCombo(t) {
@@ -904,12 +906,12 @@ function tickCombo(t) {
   $('#combo-box').classList.toggle('hurry', k < 0.3);
 }
 
-// Floating "+N点" above the card when an extra problem is cleared.
+// Floating "+N очков" above the card when an extra problem is cleared.
 function pointsPop(points) {
   const r = card.getBoundingClientRect();
   const x = r.left + r.width / 2; const y = r.top + 26;
   if (S.reduced) return;
-  fx.text(x, y, `+${points.toLocaleString('ja-JP')}点`, { color: '#ffd23f', size: 30 + Math.min(26, Math.log2(points / 10) * 4), vy: -160, life: 1.1 });
+  fx.text(x, y, `+${points.toLocaleString('ru-RU')} очков`, { color: '#ffd23f', size: 30 + Math.min(26, Math.log2(points / 10) * 4), vy: -160, life: 1.1 });
 }
 
 function unitSlam(unit, L) {
@@ -920,10 +922,12 @@ function unitSlam(unit, L) {
   const r = stage.getBoundingClientRect();
   const el = document.createElement('div');
   el.className = 'unit-slam';
-  const big = E > 0.45 && unit !== '百';
-  const size = big ? 64 + 40 * Math.min(1, E) : 30;
+  const big = E > 0.45 && unit !== '100';
+  const label = unitLabel(unit);
+  // Long labels ("100 тыс.") shrink to stay on screen.
+  const size = Math.min(big ? 64 + 40 * Math.min(1, E) : 30, (innerWidth * 0.9) / (label.length * 0.62));
   el.style.fontSize = `${size}px`;
-  el.textContent = unitLabel(unit);
+  el.textContent = label;
   $('#cutins').appendChild(el);
   const w = el.offsetWidth; const h = el.offsetHeight;
   const x0 = big ? r.left + r.width / 2 - w / 2 : box.left + box.width / 2 - w / 2;
@@ -1017,7 +1021,7 @@ async function finale() {
   if (run === S.run) showResult();
 }
 
-// Finale variants (id041, id044): each ends with the 100点 stamp.
+// Finale variants (id041, id044): each ends with the "100 очков" stamp.
 const heroLike = (scale) => { const m = new Dopakichi(backLayer, { scale, palette: ul.variant(S.look && S.look.color) || 'pink', front: frontLayer }); m.setCostume(hero.costume); actors.push(m); return m; };
 const dropActor = (m) => { m.destroy(); actors.splice(actors.indexOf(m), 1); };
 const ROCKET_SVG = '<svg viewBox="-60 -40 120 80"><g stroke="#1b1d4d" stroke-width="4" stroke-linejoin="round"><path d="M-40 -14 L-58 -30 L-50 0 L-58 30 L-40 14Z" fill="#ff4f6d"/><path d="M-44 -16 Q10 -30 50 0 Q10 30 -44 16Z" fill="#fff"/><path d="M30 -10 Q46 -4 50 0 Q46 4 30 10Z" fill="#ff7ab6"/><circle cx="10" cy="0" r="9" fill="#8fd3ff"/><path d="M-20 16 L-34 34 L-6 18Z" fill="#3b6bff"/></g></svg>';
@@ -1035,7 +1039,7 @@ const FINALES = {
     giant.hands.forEach((h) => { h.raise = 1; });
     const y0 = giant.y; const y1 = H + 10;
     await tween(700, (k) => { giant.y = lerp(y0, y1, k); giant.ground = giant.y; }, easeOutBack);
-    bigStamp('100点');
+    bigStamp('100 очков');
     S.shake = 16;
     for (let i = 0; i < 3; i++) { giant.earL.kick(700); giant.earR.kick(700); await tween(260, (k) => { giant.lift = Math.sin(k * Math.PI) * 60; giant.rot = Math.sin(k * Math.PI * 2) * 6; }); giant.lift = 0; giant.rot = 0; giant.sq.value = 0.85; }
     parade(1, true);
@@ -1049,7 +1053,7 @@ const FINALES = {
   async fireworks(W, H) {
     S.flash = 0.8;
     for (let i = 0; i < 5; i++) { fxBack.fireworks(W, H, 5 + i, 0.05, 0.5); if (i % 2 === 0) fx.fireworks(W, H, 2, 0.08, 0.35); audio.play('crash', audio.now(), { v: 0.18 }); S.shake = Math.max(S.shake, 6); await wait(260); }
-    bigStamp('100点');
+    bigStamp('100 очков');
     S.shake = 16; S.flash = 1;
     const cx = W / 2; const cy = H * 0.3;
     for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2; fx.burst(cx + Math.cos(a) * 120, cy + Math.sin(a) * 120, { count: 6, kinds: ['mini', 'star'], speed: 260, up: 60 }); }
@@ -1075,13 +1079,13 @@ const FINALES = {
       if (Math.random() < 0.6) fx.burst(x - 70, y + 10, { count: 4, kinds: ['star', 'spark', 'confetti'], speed: 180, up: -40 });
     }, easeInOutCubic);
     rk.remove(); dropActor(rider);
-    bigStamp('100点');
+    bigStamp('100 очков');
     S.shake = 16;
     fxBack.fireworks(W, H, 8, 0.06, 0.4);
     parade(1, true);
     await wait(1300);
   },
-  // A marching parade with a big "100てん" banner.
+  // A marching parade with a big "100 очков" banner.
   async parade(W, H) {
     const band = [];
     const y = H * 0.62;
@@ -1094,7 +1098,7 @@ const FINALES = {
       actors.push(m); band.push(m);
     }
     const banner = document.createElement('div');
-    banner.className = 'finale-banner'; banner.textContent = '100てん！';
+    banner.className = 'finale-banner'; banner.textContent = '100 очков!';
     $('#cutins').appendChild(banner);
     audio.gong();
     const span = W + 80 + n * 70 + 80;
@@ -1104,7 +1108,7 @@ const FINALES = {
       banner.style.transform = `translate(${lead.x - 90}px, ${y - 220 * lead.S - 30}px)`;
       if (Math.random() < 0.3) fx.burst(lead.x, y - 100, { count: 5, kinds: ['confetti', 'star'], speed: 300, up: 150 });
     }, (k) => k);
-    bigStamp('100点');
+    bigStamp('100 очков');
     S.shake = 14;
     band.forEach(dropActor); banner.remove();
     fxBack.fireworks(W, H, 6, 0.06, 0.35);
@@ -1115,7 +1119,7 @@ const FINALES = {
 function bigStamp(text) {
   const el = document.createElement('div');
   el.className = 'unit-slam';
-  el.style.fontSize = `${Math.min(110, innerWidth * 0.26)}px`;
+  el.style.fontSize = `${Math.min(110, innerWidth * 0.26, (innerWidth * 0.9) / (text.length * 0.62))}px`;
   el.style.color = '#ff7ab6';
   el.textContent = text;
   $('#cutins').appendChild(el);
@@ -1132,8 +1136,8 @@ function bigStamp(text) {
 function showResult() {
   const rate = S.firstTry / S.N;
   $('#r-score').textContent = String(BASIC_SCORE);
-  $('#r-ok').innerHTML = `${S.solved}<small>問</small>`;
-  $('#r-ng').innerHTML = `${S.misses}<small>回</small>`;
+  $('#r-ok').innerHTML = `${S.solved}<small> ${plural(S.solved, ...W.problem)}</small>`;
+  $('#r-ng').innerHTML = `${S.misses}<small> ${plural(S.misses, ...W.time)}</small>`;
   $('#r-rate').textContent = `${Math.round(rate * 100)}%`;
   const t = S.endT - S.startT;
   $('#r-time').textContent = fmtTime(t);
@@ -1144,12 +1148,12 @@ function showResult() {
   S.record = S.demo ? null : store.addRecord({ mode: S.plan.mode, grade: S.plan.grade, skill: S.plan.skill, count: S.N, score: BASIC_SCORE, ok: S.solved, ng: S.misses, firstRate: rate, timeMs: Math.round(t), dopaL: S.dopa.L });
   if (recording()) { growth.notePlay(stats(), { mode: S.plan.mode, day: store.dayKey(), timeMs: Math.round(t), dopaL: S.dopa.L, firstRate: rate }); store.save(); }
   questNote({ type: 'play', mode: S.plan.mode });
-  $('#result-title').textContent = review ? 'ふくしゅう クリア' : `${modeName(S.plan)} クリア`;
+  $('#result-title').textContent = review ? 'Ошибки исправлены!' : `${modeName(S.plan)}: готово!`;
   const un = $('#r-unlock');
-  un.textContent = review ? '' : ok ? 'エクストラ解放' : '初回正解率80%以上でエクストラ';
+  un.textContent = review ? '' : ok ? 'Экстра открыта!' : 'Экстра откроется, если 80% решено с первого раза';
   un.classList.toggle('yes', ok);
   $('#go-extra').hidden = !ok;
-  $('#go-extra small').textContent = `${Math.round(EXTRA_MS / 1000)}秒`;
+  $('#go-extra small').textContent = `${Math.round(EXTRA_MS / 1000)} сек`;
   $('#go-again').hidden = ok;
   renderSkillNews($('#r-skills'));
   renderGrowth($('#r-growth'));
@@ -1164,9 +1168,9 @@ function showResult() {
 }
 
 function countUp(el, to, dur, from = 0) {
-  if (S.reduced) { el.textContent = to.toLocaleString('ja-JP'); return; }
+  if (S.reduced) { el.textContent = to.toLocaleString('ru-RU'); return; }
   let lastV = -1;
-  tween(dur, (k) => { const v = Math.round(lerp(from, to, k)); if (v !== lastV) { el.textContent = v.toLocaleString('ja-JP'); lastV = v; if (v % 5 === 0 || to > 400) audio.play('blip', audio.now(), { m: 72 + Math.floor((v / Math.max(1, to)) * 24), v: 0.06 }); } }, easeOutCubic)
+  tween(dur, (k) => { const v = Math.round(lerp(from, to, k)); if (v !== lastV) { el.textContent = v.toLocaleString('ru-RU'); lastV = v; if (v % 5 === 0 || to > 400) audio.play('blip', audio.now(), { m: 72 + Math.floor((v / Math.max(1, to)) * 24), v: 0.06 }); } }, easeOutCubic)
     .then(() => { audio.clear(1); const c = centerOf(el); fx.burst(c.x, c.y, { count: 40, kinds: ['confetti', 'star', 'coin'], speed: 700, up: 200, life: 0.6 }); fxBack.burst(c.x, c.y, { count: 90, kinds: ['confetti', 'star', 'coin', 'mini'], speed: 1100, up: 300 }); hero.celebrate(1, { big: true, audio }); });
 }
 
@@ -1179,7 +1183,7 @@ function startExtra() {
   S.combo = 0;
   showCombo();
   $('.clock').classList.add('extra');
-  $('#clock-label').textContent = 'のこり';
+  $('#clock-label').textContent = 'осталось';
   $('#ok-total').textContent = '';
   updateTally();
   audio.play('musicGain', audio.now(), { v: 0.8, ramp: 0.2 });
@@ -1197,7 +1201,7 @@ async function endExtra() {
   S.ready = false;
   if (S.reach) endReach();
   audio.gong();
-  bigStamp('終了');
+  bigStamp('Финиш!');
   S.flash = 0.6;
   await wait(1700);
   if (run === S.run) showFinal();
@@ -1207,10 +1211,10 @@ function showFinal() {
   const total = BASIC_SCORE + S.extra.score;
   if (S.record) store.updateRecord(S.record.id, { score: total, extraOk: S.extra.solved, extraNg: S.extra.misses, dopaL: S.dopa.L });
   if (recording()) { growth.noteDopa(stats(), S.dopa.L); store.save(); }
-  $('#f-break').textContent = `基本 ${BASIC_SCORE} ＋ エクストラ ${S.extra.score.toLocaleString('ja-JP')}`;
-  $('#f-ok').innerHTML = `${S.extra.solved}<small>問</small>`;
-  $('#f-ng').innerHTML = `${S.extra.misses}<small>回</small>`;
-  $('#f-bng').innerHTML = `${S.misses}<small>回</small>`;
+  $('#f-break').textContent = `основа ${BASIC_SCORE} + экстра ${S.extra.score.toLocaleString('ru-RU')}`;
+  $('#f-ok').innerHTML = `${S.extra.solved}<small> ${plural(S.extra.solved, ...W.problem)}</small>`;
+  $('#f-ng').innerHTML = `${S.extra.misses}<small> ${plural(S.extra.misses, ...W.time)}</small>`;
+  $('#f-bng').innerHTML = `${S.misses}<small> ${plural(S.misses, ...W.time)}</small>`;
   $('#f-time').textContent = fmtTime(S.endT - S.startT);
   $('#f-dopa').textContent = fmtDopa(S.dopa.L);
   renderSkillNews($('#f-skills'));
@@ -1278,9 +1282,9 @@ addEventListener('pointerdown', (e) => {
 
 function modeName(plan) {
   if (plan.mode === 'grade') return MODE_LABEL.grade(plan.grade);
-  if (plan.mode === 'practice') return `れんしゅう`;
-  if (plan.mode === 'demo') return 'デモ';
-  return MODE_LABEL[plan.mode] || 'ドリル';
+  if (plan.mode === 'practice') return 'Тренировка';
+  if (plan.mode === 'demo') return 'Демо';
+  return MODE_LABEL[plan.mode] || 'Тренажёр';
 }
 // ---------------------------------------------------------------- time capsule (id039)
 // One problem a day may come back from the child's first days with a mastered
@@ -1302,7 +1306,7 @@ async function capsuleIntro(info) {
   const r = card.getBoundingClientRect();
   const el = document.createElement('div');
   el.className = 'capsule-intro';
-  el.innerHTML = `<div class="ci-env">${ENVELOPE_SVG}<div class="ci-letter"><small>タイムカプセル</small><b>${fmtDay(info.d)}の もんだい</b><span>はじめて といた ころの もんだいだよ</span></div></div>`;
+  el.innerHTML = `<div class="ci-env">${ENVELOPE_SVG}<div class="ci-letter"><small>Капсула времени</small><b>Пример от ${fmtDay(info.d)}</b><span>Такой пример был в самом начале</span></div></div>`;
   el.style.left = `${r.left + r.width / 2}px`; el.style.top = `${r.top + r.height / 2}px`;
   $('#cutins').appendChild(el);
   const env = el.querySelector('.ci-env'); const letter = el.querySelector('.ci-letter'); const flap = el.querySelector('.env-flap');
@@ -1326,14 +1330,14 @@ function capsuleDone(info) {
   const cmp = growth.capsuleCompare(info, S.qMs, S.qMisses || 0);
   const st = stats(); st.capsules = (st.capsules || 0) + 1; if (cmp.what === 'time') st.capsuleFaster = (st.capsuleFaster || 0) + 1;
   const day = fmtDay(info.d);
-  const sec = (ms) => `${Math.max(0.1, ms / 1000).toFixed(1)}びょう`;
-  const line = cmp.what === 'time' ? `${day} ${sec(cmp.from)} → きょう ${sec(cmp.to)}` : cmp.what === 'miss' ? `${day} おしい ${cmp.from}回 → きょう ${cmp.to}回` : `${day}の もんだいを もう一度 といたよ`;
+  const sec = (ms) => `${Math.max(0.1, ms / 1000).toFixed(1).replace('.', ',')} сек`;
+  const line = cmp.what === 'time' ? `${day}: ${sec(cmp.from)} → сегодня ${sec(cmp.to)}` : cmp.what === 'miss' ? `${day}: почти ${cmp.from} → сегодня ${cmp.to}` : `Пример от ${day} решён снова`;
   S.capsuleNews = line;
   const r = stage.getBoundingClientRect();
   const el = document.createElement('div');
   el.className = 'capsule-result';
-  el.innerHTML = cmp.what === 'none' ? `<small>タイムカプセル</small><b>${day}の もんだい</b><span>また とけたね！</span>`
-    : `<small>タイムカプセル</small><span class="cr-row"><span class="cr-old"><i>あの日</i>${cmp.what === 'time' ? sec(cmp.from) : `おしい ${cmp.from}回`}</span><span class="cr-arrow">→</span><span class="cr-new"><i>きょう</i>${cmp.what === 'time' ? sec(cmp.to) : `おしい ${cmp.to}回`}</span></span>`;
+  el.innerHTML = cmp.what === 'none' ? `<small>Капсула времени</small><b>Пример от ${day}</b><span>Снова решено!</span>`
+    : `<small>Капсула времени</small><span class="cr-row"><span class="cr-old"><i>тогда</i>${cmp.what === 'time' ? sec(cmp.from) : `почти: ${cmp.from}`}</span><span class="cr-arrow">→</span><span class="cr-new"><i>сегодня</i>${cmp.what === 'time' ? sec(cmp.to) : `почти: ${cmp.to}`}</span></span>`;
   el.style.left = `${r.left + r.width / 2}px`; el.style.top = `${r.top + 6}px`;
   $('#cutins').appendChild(el);
   audio.unit(0.7);
@@ -1355,13 +1359,13 @@ function polishFx() {
   const r = card.getBoundingClientRect();
   const x = r.left + r.width / 2; const y = r.top + 30;
   if (S.reduced) return;
-  fx.text(x, y, 'ピカッ！ ピカピカ', { color: '#ffd23f', size: 26, vy: -80, life: 1.1 });
+  fx.text(x, y, 'Блеск! Как новенький', { color: '#ffd23f', size: 26, vy: -80, life: 1.1 });
   fx.burst(x, y, { count: 36, kinds: ['spark', 'star'], speed: 520, up: 140 });
   fx.ring(x, y, { color: '#fff', radius: 90, width: 8 });
   S.flash = Math.max(S.flash, 0.3);
 }
 
-// "のびたよ！": this play compared with earlier days, improvements only (id038).
+// "Стало лучше!": this play compared with earlier days, improvements only (id038).
 function renderGrowth(el) {
   el.innerHTML = '';
   if (!recording() || S.plan.placement) return;
@@ -1369,9 +1373,9 @@ function renderGrowth(el) {
   const lines = growth.growthLines(S.sessionTimes || {}, progress().skills, today);
   if (!lines.length) return;
   const gst = stats(); gst.grew = (gst.grew || 0) + 1; store.save();
-  const when = (x) => (x.kind === 'first' ? `はじめて（${fmtDay(x.d)}）` : growth.daysBetween(x.d, today) === 1 ? 'きのう' : fmtDay(x.d));
-  const val = (what, v) => (what === 'time' ? `${Math.max(0.1, v / 1000).toFixed(1)}びょう` : `${Math.round(v * 100)}%`);
-  el.innerHTML = `<p class="gb-head">のびたよ！</p>${lines.map((x) => `<div class="gb-line"><b>${SKILL[x.skill].name}</b><span class="gb-row"><span class="gb-what">${x.what === 'time' ? '1もん' : '初回正解'}</span><span class="gb-old"><small>${when(x)}</small>${val(x.what, x.from)}</span><span class="gb-arrow">→</span><span class="gb-new"><small>きょう</small><em data-what="${x.what}" data-from="${x.from}" data-to="${x.to}">${val(x.what, S.reduced ? x.to : x.from)}</em></span></span></div>`).join('')}`;
+  const when = (x) => (x.kind === 'first' ? `в начале (${fmtDay(x.d)})` : growth.daysBetween(x.d, today) === 1 ? 'вчера' : fmtDay(x.d));
+  const val = (what, v) => (what === 'time' ? `${Math.max(0.1, v / 1000).toFixed(1).replace('.', ',')} сек` : `${Math.round(v * 100)}%`);
+  el.innerHTML = `<p class="gb-head">Стало лучше!</p>${lines.map((x) => `<div class="gb-line"><b>${SKILL[x.skill].name}</b><span class="gb-row"><span class="gb-what">${x.what === 'time' ? '1 пример' : 'с первого раза'}</span><span class="gb-old"><small>${when(x)}</small>${val(x.what, x.from)}</span><span class="gb-arrow">→</span><span class="gb-new"><small>сегодня</small><em data-what="${x.what}" data-from="${x.from}" data-to="${x.to}">${val(x.what, S.reduced ? x.to : x.from)}</em></span></span></div>`).join('')}`;
   if (S.reduced) return;
   const run = S.run;
   setTimeout(() => {
@@ -1395,18 +1399,18 @@ function starRow(n, max = STAR_MAX) {
 }
 function renderSkillNews(el) {
   const items = [
-    ...(S.capsuleNews ? [`<p class="capsule-news"><b>タイムカプセル</b>${S.capsuleNews}</p>`] : []),
-    ...(S.polished || []).map((id) => `<p class="polish-news">ピカピカ！ ${SKILL[id].name}</p>`),
-    ...Object.entries(S.newStars || {}).map(([id, n]) => `<p class="star-up">${starRow(n)}<span>☆${n}に なった！ ${SKILL[id].name}</span></p>`),
-    ...S.newMastered.map((id) => `<p class="mastered">マスター！ ${SKILL[id].name}</p>`),
-    ...S.newUnlocks.map((id) => `<p>かいほう！ ${SKILL[id].name}</p>`),
+    ...(S.capsuleNews ? [`<p class="capsule-news"><b>Капсула времени</b>${S.capsuleNews}</p>`] : []),
+    ...(S.polished || []).map((id) => `<p class="polish-news">Блестит! ${SKILL[id].name}</p>`),
+    ...Object.entries(S.newStars || {}).map(([id, n]) => `<p class="star-up">${starRow(n)}<span>Теперь ☆${n}: ${SKILL[id].name}</span></p>`),
+    ...S.newMastered.map((id) => `<p class="mastered">Освоено: ${SKILL[id].name}</p>`),
+    ...S.newUnlocks.map((id) => `<p>Открыто: ${SKILL[id].name}</p>`),
   ];
-  if (S.plan.placement) items.unshift(`<p>じつりょくチェック おわり　${SKILLS.filter((x) => stateOf(progress(), x.id) === 'mastered').length}こ クリア</p>`);
+  if (S.plan.placement) items.unshift(`<p>Проверка уровня окончена: освоено ${pn(SKILLS.filter((x) => stateOf(progress(), x.id) === 'mastered').length, 'skill')}</p>`);
   el.innerHTML = items.slice(0, 5).join('');
 }
 function setReviewButton(btn, n) {
   btn.hidden = !n;
-  btn.textContent = `まちがえた ${n}問を やりなおす`;
+  btn.textContent = `Исправить ошибки (${n})`;
 }
 function startReview() {
   const prog = progress();
@@ -1418,7 +1422,7 @@ function refreshTitle() {
   const n = prog.review.length;
   $('#start-review').hidden = !n;
   $('#review-count').textContent = n;
-  $('#level-sub').textContent = prog.placed ? `つぎは「${SKILL[frontier(prog)[0] || ORDER[ORDER.length - 1]].name}」` : 'はじめは じつりょくチェック';
+  $('#level-sub').textContent = prog.placed ? `дальше: «${SKILL[frontier(prog)[0] || ORDER[ORDER.length - 1]].name}»` : 'сначала проверка уровня';
   const done = SKILLS.filter((x) => stateOf(prog, x.id) === 'mastered').length;
   $('#tree-badge').textContent = `${done}/${SKILLS.length}`;
   renderQuests();
@@ -1481,7 +1485,7 @@ onFrame((dt, t) => {
       const el = (S.endT || t) - S.startT;
       txt = fmtTime(el);
       $('.clock').classList.toggle('over', el > S.targetMs);
-      if (el > S.targetMs) $('#clock-label').textContent = '目標超過';
+      if (el > S.targetMs) $('#clock-label').textContent = 'дольше цели';
     }
     if (txt !== lastClockText) { $('#clock').textContent = txt; lastClockText = txt; }
 
@@ -1567,9 +1571,9 @@ function setMuted(m, { persist = true } = {}) {
   audio.setMuted(m);
   const b = $('[data-toggle="sound"]');
   b.setAttribute('aria-pressed', String(!m));
-  b.querySelector('b').textContent = m ? 'オフ' : 'オン';
+  b.querySelector('b').textContent = m ? 'выкл' : 'вкл';
   $('#mute').setAttribute('aria-pressed', String(m));
-  $('#mute').setAttribute('aria-label', m ? '音を出す' : '音を消す');
+  $('#mute').setAttribute('aria-label', m ? 'включить звук' : 'выключить звук');
   if (persist) store.updateSettings({ sound: !m });
 }
 function setVolume(v, { persist = true } = {}) {
@@ -1664,8 +1668,8 @@ function renderTree(justIds = [], starIds = []) {
     b.className = `node ${st}${justIds.includes(sk.id) ? ' just' : ''}${starIds.includes(sk.id) ? ' star-up' : ''}${rusty ? ' rusty' : ''}`;
     b.dataset.id = sk.id;
     b.style.cssText = `left:${pos[sk.id].x}px;top:${pos[sk.id].y}px;width:${nodeW}px;height:${NODE_H}px;--p:${masteryRatio(prog, sk.id)}`;
-    b.innerHTML = `<i class="hold"></i><span class="g">${sk.grade}年</span><span>${sk.name}</span>${st === 'learning' ? '<i class="ring"></i>' : ''}${st === 'mastered' ? `<i class="stars s${stars}">${starRow(stars)}</i>` : ''}${rusty ? '<i class="rust" aria-hidden="true">さび</i>' : ''}`;
-    b.setAttribute('aria-label', `${sk.name} ${{ locked: 'まだ', new: 'あたらしい', learning: 'れんしゅうちゅう', mastered: `マスター ほし${stars}こ${rusty ? ' さびついている' : ''}` }[st]}`);
+    b.innerHTML = `<i class="hold"></i><span class="g">${sk.grade} кл.</span><span>${sk.name}</span>${st === 'learning' ? '<i class="ring"></i>' : ''}${st === 'mastered' ? `<i class="stars s${stars}">${starRow(stars)}</i>` : ''}${rusty ? '<i class="rust" aria-hidden="true">ржав.</i>' : ''}`;
+    b.setAttribute('aria-label', `${sk.name} ${{ locked: 'закрыто', new: 'новое', learning: 'в процессе', mastered: `освоено, ${pn(stars, 'star')}${rusty ? ', заржавело' : ''}` }[st]}`);
     tree.appendChild(b);
   }
   $('#tree-count').textContent = `${SKILLS.filter((x) => stateOf(prog, x.id) === 'mastered').length} / ${SKILLS.length}`;
@@ -1711,11 +1715,11 @@ function openSkillInfo(id) {
   const times = (r.times || []).filter((e) => e.f);
   const best = times.length ? Math.min(...times.map((e) => e.t)) : null;
   S.skillInfo = id;
-  $('#si-grade').textContent = `${sk.grade}年　${LANES[sk.lane]}`;
+  $('#si-grade').textContent = `${sk.grade} класс · ${LANES[sk.lane]}`;
   $('#si-title').textContent = sk.name;
   $('#si-stars').innerHTML = `${starRow(n)}<span>☆${n} / ${STAR_MAX}</span>`;
-  $('#si-next').innerHTML = next ? `<p class="si-label">つぎの ☆${next.n}</p><p class="si-text">${next.text}</p><p class="si-now">${next.now}</p>` : '<p class="si-text done">☆5 たっせい！ すごい！</p>';
-  $('#si-note').textContent = `${rustyOf(prog).includes(id) ? 'すこし さびているよ。1もん 初回正解で ピカピカ！　' : ''}といた もんだい ${r.n || 0}もん${best != null ? `　いちばん はやい 1もん ${(best / 1000).toFixed(1)}びょう` : ''}`;
+  $('#si-next').innerHTML = next ? `<p class="si-label">Следующая ☆${next.n}</p><p class="si-text">${next.text}</p><p class="si-now">${next.now}</p>` : '<p class="si-text done">☆5 получена! Супер!</p>';
+  $('#si-note').textContent = `${rustyOf(prog).includes(id) ? 'Немного заржавело. Реши 1 пример с первого раза — заблестит! ' : ''}Решено: ${pn(r.n || 0, 'problem')}${best != null ? ` · самый быстрый: ${(best / 1000).toFixed(1).replace('.', ',')} сек` : ''}`;
   $('#skill-info').hidden = false;
   const cardEl = $('#skill-info .modal-card');
   if (!S.reduced) tween(260, (k) => { cardEl.style.transform = `translateY(${(1 - k) * 30}px) scale(${0.92 + 0.08 * k})`; }, easeOutBack).then(() => { cardEl.style.transform = ''; });
@@ -1810,7 +1814,7 @@ function askRelock(id) {
   const ids = relockTargets(progress(), id);
   audio.unlock();
   if (!ids.length) {
-    toast('まだ きろくが ないので けせないよ');
+    toast('Тут пока нечего удалять');
     audio.play('boing', audio.now(), { v: 0.12 });
     return;
   }
@@ -1818,10 +1822,10 @@ function askRelock(id) {
   const deps = ids.length - (ids[0] === id ? 1 : 0);
   const MAX = 6;
   openConfirm({
-    title: 'スキルを けす',
-    msg: `「${SKILL[id].name}」の きろくを けします。${deps ? `<br>これに つながる <b>${deps}こ</b> の スキルも きえて、ロックに もどります。` : ''}`,
-    list: ids.slice(0, MAX).map((x) => `<li>${SKILL[x].name}</li>`).join('') + (ids.length > MAX ? `<li class="more">ほか ${ids.length - MAX}こ</li>` : ''),
-    yes: 'けす', no: 'やめる',
+    title: 'Удалить навык',
+    msg: `Записи навыка «${SKILL[id].name}» будут удалены.${deps ? `<br>Ещё <b>${pn(deps, 'skill')}</b>, которые от него зависят, тоже удалятся и снова закроются.` : ''}`,
+    list: ids.slice(0, MAX).map((x) => `<li>${SKILL[x].name}</li>`).join('') + (ids.length > MAX ? `<li class="more">и ещё ${ids.length - MAX}</li>` : ''),
+    yes: 'Удалить', no: 'Отмена',
     onYes: () => doRelock(id),
     focusBack: $(`.node[data-id="${id}"]`),
   });
@@ -1833,7 +1837,7 @@ function doRelock(id) {
   renderTree();
   audio.erase();
   audio.play('boing', audio.now() + 0.08, { v: 0.12 });
-  toast(`${gone.length}こ の スキルを けしたよ`);
+  toast(`Удалено: ${pn(gone.length, 'skill')}`);
   gone.forEach((x, i) => {
     const el = $(`.node[data-id="${x}"]`);
     if (!el || S.reduced) return;
@@ -1848,9 +1852,9 @@ function doRelock(id) {
 function askToTitle() {
   const playing = S.screen === 'play';
   openConfirm({
-    title: 'タイトルに もどる？',
-    msg: playing ? 'いまの プレイは ここで おわります。' : 'タイトル画面に もどります。',
-    yes: 'もどる', no: 'つづける', danger: playing,
+    title: 'Вернуться в меню?',
+    msg: playing ? 'Эта игра закончится.' : 'Вернёмся на главный экран.',
+    yes: 'В меню', no: 'Продолжить', danger: playing,
     onYes: () => { audio.play('blip', audio.now(), { m: 72, v: 0.08 }); toTitle(); },
     focusBack: document.activeElement && document.activeElement !== document.body ? document.activeElement : null,
   });
@@ -1866,7 +1870,7 @@ function toast(msg) {
 
 // ---------------------------------------------------------------- calendar
 const cal = { y: new Date().getFullYear(), m: new Date().getMonth(), seen: new Set() };
-const MODE_NAMES = { drill: (h) => `${h.count || ''}問ドリル`, level: () => 'じぶんレベル', grade: (h) => `${h.grade}ねんせい`, review: () => 'ふくしゅう', practice: (h) => `れんしゅう（${SKILL[h.skill]?.name || ''}）` };
+const MODE_NAMES = { drill: (h) => `Тренажёр ${h.count || ''}`, level: () => 'Мой уровень', grade: (h) => `${h.grade} класс`, review: () => 'Работа над ошибками', practice: (h) => `Тренировка (${SKILL[h.skill]?.name || ''})` };
 const stampSvg = (score) => {
   const gold = score > 100;
   const col = gold ? '#ffb000' : '#ff4f6d';
@@ -1876,11 +1880,11 @@ function renderCalendar(animateNew = false) {
   const { y, m } = cal;
   const today = new Date();
   const todayKey = store.dayKey(today);
-  $('#cal-title').textContent = `${y}年${m + 1}月`;
+  $('#cal-title').textContent = `${MONTHS[m]} ${y}`;
   const sum = store.monthSummary(y, m);
   const nocount = store.nocountDays();
   const questDays = (store.load().quests || {}).doneDays || {};
-  const first = new Date(y, m, 1).getDay();
+  const first = (new Date(y, m, 1).getDay() + 6) % 7; // weeks start on Monday
   const days = new Date(y, m + 1, 0).getDate();
   let html = '';
   for (let i = 0; i < first; i++) html += '<span class="cal-day blank"></span>';
@@ -1890,17 +1894,17 @@ function renderCalendar(animateNew = false) {
     const cls = ['cal-day'];
     if (key === todayKey) cls.push('today');
     if (info) { cls.push('played'); if (animateNew && !cal.seen.has(`${key}:${info.best}`)) cls.push('pop'); }
-    const label = info ? `${m + 1}月${d}日 ${info.plays}回 さいこう${info.best}点${questDays[key] ? ' クエスト コンプリート' : ''}` : `${m + 1}月${d}日`;
+    const label = info ? `${ruDate(m + 1, d)}: игр ${info.plays}, рекорд ${info.best}${questDays[key] ? ', все задания' : ''}` : ruDate(m + 1, d);
     const sticker = store.stickerOn(key);
     const stk = sticker ? `<span class="stk">${stickerSvg(sticker)}</span>` : '';
     const nc = !info && nocount[key];
     if (questDays[key]) cls.push('quest');
     const qd = questDays[key] ? '<span class="qd" aria-hidden="true">★</span>' : '';
     if (nc) cls.push('nocount');
-    const ncStamp = nc ? '<span class="nc">ノーカン</span>' : '';
+    const ncStamp = nc ? '<span class="nc">не в счёт</span>' : '';
     html += info
-      ? `<button type="button" class="${cls.join(' ')}" data-day="${key}" data-key="${key}" aria-label="${label}"><span class="n">${d}</span>${stampSvg(info.best)}<span class="sc${info.best >= 10000 ? ' big' : ''}">${info.best.toLocaleString('ja-JP')}</span>${stk}${qd}</button>`
-      : `<span class="${cls.join(' ')}" data-key="${key}" aria-label="${label}${nc ? ' ノーカン' : ''}"><span class="n">${d}</span>${ncStamp}${stk}</span>`;
+      ? `<button type="button" class="${cls.join(' ')}" data-day="${key}" data-key="${key}" aria-label="${label}"><span class="n">${d}</span>${stampSvg(info.best)}<span class="sc${info.best >= 10000 ? ' big' : ''}">${info.best.toLocaleString('ru-RU')}</span>${stk}${qd}</button>`
+      : `<span class="${cls.join(' ')}" data-key="${key}" aria-label="${label}${nc ? ', не в счёт' : ''}"><span class="n">${d}</span>${ncStamp}${stk}</span>`;
     if (info) cal.seen.add(`${key}:${info.best}`);
   }
   $('#cal-grid').innerHTML = html;
@@ -1909,12 +1913,12 @@ function renderCalendar(animateNew = false) {
   const best = store.bestStreak();
   const bonus = store.bonusState();
   const badges = [];
-  if (n >= 1) badges.push(`<span class="cal-badge${n >= 3 ? ' hot' : ''}">れんぞく<b>${n}</b>日${playedToday ? '' : '（きょうで' + (n + 1) + '日）'}</span>`);
-  else badges.push(`<span class="cal-badge">きょうから れんぞく記録スタート</span>`);
-  if (best >= 2) badges.push(`<span class="cal-badge best">さいこう<b>${best}</b>日</span>`);
-  if (bonus.total) badges.push(`<span class="cal-badge stk">シール<b>${bonus.total}</b>まい</span>`);
+  if (n >= 1) badges.push(`<span class="cal-badge${n >= 3 ? ' hot' : ''}">подряд <b>${n}</b> ${plural(n, ...W.day)}${playedToday ? '' : ` (сегодня будет ${n + 1})`}</span>`);
+  else badges.push(`<span class="cal-badge">Сегодня начнётся серия!</span>`);
+  if (best >= 2) badges.push(`<span class="cal-badge best">рекорд <b>${best}</b> ${plural(best, ...W.day)}</span>`);
+  if (bonus.total) badges.push(`<span class="cal-badge stk"><b>${bonus.total}</b> ${plural(bonus.total, ...W.sticker)}</span>`);
   const hammers = store.items().hammer;
-  badges.push(`<span class="cal-badge hmr" aria-label="ノーカンハンマー ${hammers}本"><i>${HAMMER_SVG}</i><b>${hammers}</b>本</span>`);
+  badges.push(`<span class="cal-badge hmr" aria-label="Молотки «Не в счёт»: ${hammers}"><i>${HAMMER_SVG}</i><b>${hammers}</b></span>`);
   $('#cal-badges').innerHTML = badges.join('');
   $('#cal-next').disabled = y > today.getFullYear() || (y === today.getFullYear() && m >= today.getMonth());
   if (animateNew && !S.reduced) $$('.cal-day.pop').forEach((el, i) => setTimeout(() => { const c = centerOf(el); fx.burst(c.x, c.y, { count: 14, kinds: ['confetti', 'star'], speed: 260, up: 80 }); audio.play('blip', audio.now(), { m: 84, v: 0.08 }); }, 350 + i * 120));
@@ -1945,15 +1949,15 @@ function openBonus(res) {
   S.bonusOpen = true;
   const m = $('#bonus');
   m.hidden = false;
-  $('#bonus-run').innerHTML = res.run >= 2 ? `れんぞく<b>${res.run}</b>日め` : 'きょうの ボーナス';
+  $('#bonus-run').innerHTML = res.run >= 2 ? `<b>${res.run}</b>-й день подряд` : 'Подарок дня';
   const slots = [];
   for (let i = 1; i <= 7; i++) {
     const got = i <= res.slot;
     const type = store.STICKERS[i - 1];
-    slots.push(`<div class="bonus-slot${got ? ' got' : ''}${i === res.slot ? ' today stamping' : ''}${i === 7 ? ' big' : ''}"><span class="d">${i}日め</span>${got ? stickerSvg(type) : i === 7 ? '？' : i}</div>`);
+    slots.push(`<div class="bonus-slot${got ? ' got' : ''}${i === res.slot ? ' today stamping' : ''}${i === 7 ? ' big' : ''}"><span class="d">${i}-й день</span>${got ? stickerSvg(type) : i === 7 ? '?' : i}</div>`);
   }
   $('#bonus-grid').innerHTML = slots.join('');
-  $('#bonus-note').textContent = res.slot === 7 ? 'とくべつシール！ カレンダーに はったよ' : `あと${7 - res.slot}日で とくべつシール`;
+  $('#bonus-note').textContent = res.slot === 7 ? 'Особая наклейка! Она уже в календаре' : `Ещё ${pn(7 - res.slot, 'day')} — и будет особая наклейка`;
   audio.unlock();
   requestAnimationFrame(() => {
     layoutActors();
@@ -2052,12 +2056,12 @@ function openTrophies() {
   ts.batch = null; store.save();
   if (!list.length) return;
   S.trophyOpen = true;
-  $('#tg-title').textContent = 'トロフィー ゲット！';
-  $('#tg-sub').innerHTML = batch.length ? `これまでの きろくで <b>${batch.length}</b>こ ゲット！` : list.length > 1 ? `<b>${list.length}</b>こ ゲット！` : '';
+  $('#tg-title').textContent = 'Новый трофей!';
+  $('#tg-sub').innerHTML = batch.length ? `За прошлые успехи: <b>${batch.length}</b>!` : list.length > 1 ? `Трофеев: <b>${list.length}</b>!` : '';
   const MAX = 6;
   const rewards = list.map((x) => x.reward && ul.ITEM[x.reward]).filter(Boolean);
-  $('#tg-list').innerHTML = list.slice(0, MAX).map((x) => `<li class="r-${x.rank}"><i>${trophySvg(x.rank)}</i><span><b>${x.name}</b><small>${x.desc}</small></span></li>`).join('') + (list.length > MAX ? `<li class="more">ほか ${list.length - MAX}こ</li>` : '')
-    + rewards.map((it) => `<li class="reward"><i>${itemThumb(it)}</i><span><b>${catName(it.cat)}「${it.name}」を てにいれた！</b><small>コレクションで えらべるよ</small></span></li>`).join('');
+  $('#tg-list').innerHTML = list.slice(0, MAX).map((x) => `<li class="r-${x.rank}"><i>${trophySvg(x.rank)}</i><span><b>${x.name}</b><small>${x.desc}</small></span></li>`).join('') + (list.length > MAX ? `<li class="more">и ещё ${list.length - MAX}</li>` : '')
+    + rewards.map((it) => `<li class="reward"><i>${itemThumb(it)}</i><span><b>Новое: «${it.name}» (${catName(it.cat)})</b><small>Можно выбрать в коллекции</small></span></li>`).join('');
   $('#trophy-got').hidden = false;
   audio.unlock();
   audio.unit(Math.min(1, 0.4 + list.length * 0.1));
@@ -2083,10 +2087,10 @@ function closeTrophies() {
 // The list screen: one card per series, folded; filters for earned / not yet.
 const trFilter = { f: 'all' };
 function trophyValueText(t, v) {
-  if (t.metric === 'bestDopaL') return `いま ${fmtDopa(stats().bestDopaL || 0)}`;
-  if (t.metric === 'minutes') return `いま ${v}ふん`;
+  if (t.metric === 'bestDopaL') return `сейчас ${fmtDopa(stats().bestDopaL || 0)}`;
+  if (t.metric === 'minutes') return `сейчас ${pn(v, 'minute')}`;
   if (/^(flag:|gradeDone|laneDone|allModes)/.test(t.metric)) return '';
-  return `いま ${v.toLocaleString('ja-JP')}`;
+  return `сейчас ${v.toLocaleString('ru-RU')}`;
 }
 function renderTrophyList() {
   const ts = trophyState();
@@ -2101,24 +2105,24 @@ function renderTrophyList() {
     html += `<h3 class="tr-cat">${cat}</h3>`;
     for (const v of cards) {
       const s = v.series;
-      const secret = s.cat === 'ひみつ';
+      const secret = s.cat === 'Секреты';
       const dots = s.items.map((x) => `<i class="${got[x.id] ? `on r-${x.rank}` : ''}"></i>`).join('');
-      const next = v.next ? `<span class="tr-next">つぎ：${secret ? '？？？' : v.next.name}${!secret && trophyValueText(v.next, v.value) ? `（${trophyValueText(v.next, v.value)}）` : ''}</span>` : '<span class="tr-next done">コンプリート！</span>';
+      const next = v.next ? `<span class="tr-next">дальше: ${secret ? '???' : v.next.name}${!secret && trophyValueText(v.next, v.value) ? ` (${trophyValueText(v.next, v.value)})` : ''}</span>` : '<span class="tr-next done">Всё собрано!</span>';
       const items = s.items.filter((x) => trFilter.f !== 'got' || got[x.id]).map((x) => {
         const hide = x.secret && !got[x.id];
         const rw = x.reward && ul.ITEM[x.reward];
-        return `<li class="${got[x.id] ? 'got' : ''}"><i>${trophySvg(got[x.id] ? x.rank : 'none')}</i><span><b>${hide ? '？？？' : x.name}</b><small>${hide ? 'ひみつの トロフィー' : x.desc}</small>${rw && !hide ? `<small class="rw">ごほうび：${catName(rw.cat)}「${rw.name}」</small>` : ''}</span><em>${got[x.id] ? day(got[x.id]) : ''}</em></li>`;
+        return `<li class="${got[x.id] ? 'got' : ''}"><i>${trophySvg(got[x.id] ? x.rank : 'none')}</i><span><b>${hide ? '???' : x.name}</b><small>${hide ? 'Секретный трофей' : x.desc}</small>${rw && !hide ? `<small class="rw">награда: «${rw.name}» (${catName(rw.cat)})</small>` : ''}</span><em>${got[x.id] ? day(got[x.id]) : ''}</em></li>`;
       }).join('');
       html += `<details class="tr-series"><summary><i class="tr-icon">${trophySvg(v.top ? v.top.rank : 'none')}</i><span class="tr-t"><b>${s.title}</b>${next}</span><span class="tr-n">${v.got.length}/${s.items.length}</span><span class="tr-dots">${dots}</span></summary><ul>${items}</ul></details>`;
     }
   }
   if (trFilter.f === 'soon') {
     // Closest next steps first (secrets and yes/no goals left out).
-    const soon = tr.SERIES.map((s) => tr.seriesView(s, ts, m)).filter((v) => v.next && v.series.cat !== 'ひみつ' && v.next.need > 1 && v.next.metric !== 'bestDopaL')
+    const soon = tr.SERIES.map((s) => tr.seriesView(s, ts, m)).filter((v) => v.next && v.series.cat !== 'Секреты' && v.next.need > 1 && v.next.metric !== 'bestDopaL')
       .map((v) => ({ v, k: Math.min(0.999, v.value / v.next.need) })).sort((a, b) => b.k - a.k).slice(0, 12);
-    html = soon.map(({ v, k }) => `<div class="tr-soon"><i class="tr-icon">${trophySvg(v.top ? v.top.rank : 'none')}</i><span class="tr-t"><b>${v.next.name}</b><span class="tr-next">${v.series.title}　${trophyValueText(v.next, v.value)} / ${v.next.need.toLocaleString('ja-JP')}</span></span><span class="tr-pct" style="--p:${k.toFixed(3)}"><b>${Math.floor(k * 100)}%</b></span></div>`).join('');
+    html = soon.map(({ v, k }) => `<div class="tr-soon"><i class="tr-icon">${trophySvg(v.top ? v.top.rank : 'none')}</i><span class="tr-t"><b>${v.next.name}</b><span class="tr-next">${v.series.title} · ${trophyValueText(v.next, v.value)} / ${v.next.need.toLocaleString('ru-RU')}</span></span><span class="tr-pct" style="--p:${k.toFixed(3)}"><b>${Math.floor(k * 100)}%</b></span></div>`).join('');
   }
-  $('#tr-list').innerHTML = html || '<p class="tr-empty">まだ ないよ</p>';
+  $('#tr-list').innerHTML = html || '<p class="tr-empty">Пока ничего нет</p>';
   $('#trophy-count').textContent = `${tr.earnedCount(ts)} / ${tr.TROPHIES.length}`;
 }
 function openTrophyList() {
@@ -2184,17 +2188,17 @@ function renderCollection() {
   $('#co-tabs').innerHTML = ul.CATS.map((c) => { const own = ul.unlockedIn(c.key, got).length; const all = ul.ITEMS.filter((it) => it.cat === c.key).length; return `<button type="button" data-cat="${c.key}" aria-pressed="${c.key === co.cat}">${c.name}<small>${own}/${all}</small></button>`; }).join('');
   const items = ul.ITEMS.filter((it) => it.cat === co.cat);
   const auto = eq[co.cat] === 'auto';
-  $('#co-note').textContent = auto ? '「おまかせ」は もっている ものから まいかい かわるよ' : 'えらんだ ものを いつも つかうよ';
-  $('#co-grid').innerHTML = `<button type="button" class="co-item auto${auto ? ' on' : ''}" data-id="auto"><span class="co-th"><b>？</b></span><span class="co-name">おまかせ</span><small>まいかい かわる</small></button>`
+  $('#co-note').textContent = auto ? '«Случайно» — каждый раз что-то из твоей коллекции' : 'Выбранное будет всегда';
+  $('#co-grid').innerHTML = `<button type="button" class="co-item auto${auto ? ' on' : ''}" data-id="auto"><span class="co-th"><b>?</b></span><span class="co-name">Случайно</span><small>каждый раз новое</small></button>`
     + items.map((it) => {
       const own = ul.isUnlocked(it, got);
       const on = !auto && eq[co.cat] === it.id;
       const tro = it.trophy && tr.TROPHY[it.trophy];
-      return `<button type="button" class="co-item${own ? '' : ' locked'}${on ? ' on' : ''}" data-id="${it.id}"${own ? '' : ` aria-label="まだ　トロフィー ${tro ? tro.name : ''}で もらえる"`}><span class="co-th">${itemThumb(it)}</span><span class="co-name">${own ? it.name : '？？？'}</span>${own ? '<small>&nbsp;</small>' : `<small class="co-lock">トロフィー「${tro ? tro.name : ''}」</small>`}</button>`;
+      return `<button type="button" class="co-item${own ? '' : ' locked'}${on ? ' on' : ''}" data-id="${it.id}"${own ? '' : ` aria-label="закрыто, награда за трофей ${tro ? tro.name : ''}"`}><span class="co-th">${itemThumb(it)}</span><span class="co-name">${own ? it.name : '???'}</span>${own ? '<small>&nbsp;</small>' : `<small class="co-lock">трофей «${tro ? tro.name : ''}»</small>`}</button>`;
     }).join('');
   const all = ul.ITEMS.length; const own = ul.ITEMS.filter((it) => ul.isUnlocked(it, got)).length;
   $('#collect-count').textContent = `${own} / ${all}`;
-  $('#co-now').textContent = `${catName(co.cat)}：${auto ? 'おまかせ' : (ul.ITEM[eq[co.cat]] || {}).name || ''}`;
+  $('#co-now').textContent = `${catName(co.cat)}: ${auto ? 'случайно' : (ul.ITEM[eq[co.cat]] || {}).name || ''}`;
 }
 // Try an item out on this screen.
 function previewItem(id) {
@@ -2240,16 +2244,16 @@ function pickItem(id) {
 const HAMMER_SVG = `<svg viewBox="0 0 100 100" aria-hidden="true"><g stroke="#1b1d4d" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><path d="M44.5 40 L55.5 40 L57 97 L43 97Z" fill="#3b6bff"/><path d="M44 60 L56 57 M44 74 L56 71 M44 88 L56 85" fill="none" stroke-width="2.6"/><rect x="13" y="12" width="74" height="30" rx="13" fill="#ff7ab6"/><rect x="5" y="8" width="15" height="38" rx="6" fill="#ffd23f"/><rect x="80" y="8" width="15" height="38" rx="6" fill="#ffd23f"/><path d="M28 20 Q50 15 72 20" fill="none" stroke="#fff" stroke-width="3" opacity=".85"/></g></svg>`;
 const HAMMER_REACH = 67; // grip to head centre, in px at the swing size
 
-const fmtDay = (key) => { const [, m, d] = key.split('-').map(Number); return `${m}月${d}日`; };
+const fmtDay = (key) => { const [, m, d] = key.split('-').map(Number); return ruDate(m, d); };
 function openHammer(offer) {
   if (S.guideOpen) return;
   S.hammerOpen = offer;
   $('#hammer-art').innerHTML = HAMMER_SVG;
-  const days = offer.days.map(fmtDay).join('と');
-  $('#hammer-msg').innerHTML = `${days}は あそばなかったね。<br>ハンマーで <b>ノーカン</b>に すると<br>れんぞく<b>${offer.run}</b>日が つづくよ！`;
+  const days = offer.days.map(fmtDay).join(' и ');
+  $('#hammer-msg').innerHTML = `${days} — без игры.<br>Стукни молотком, и это будет <b>не в счёт</b>:<br>серия <b>${pn(offer.run, 'day')}</b> не прервётся!`;
   const max = store.HAMMER.max;
-  $('#hammer-have').innerHTML = `もっている ハンマー ${Array.from({ length: max }, (_, i) => `<i class="${i < offer.hammers ? 'on' : ''}">${HAMMER_SVG}</i>`).join('')}`;
-  $('#hammer-yes').textContent = `つかう（${offer.days.length}本）`;
+  $('#hammer-have').innerHTML = `Молотков: ${Array.from({ length: max }, (_, i) => `<i class="${i < offer.hammers ? 'on' : ''}">${HAMMER_SVG}</i>`).join('')}`;
+  $('#hammer-yes').textContent = `Стукнуть (${offer.days.length})`;
   $('#hammer').hidden = false;
   audio.unlock();
   audio.play('boing', audio.now(), { v: 0.12 });
@@ -2292,7 +2296,7 @@ async function runHammer(offer) {
   const badge = $('.cal-badge');
   if (badge) {
     const c = centerOf(badge);
-    if (!S.reduced) { fx.text(c.x, c.y - 30, `れんぞく${offer.run}日 キープ！`, { color: '#ff7ab6', size: 26, vy: -70, life: 1.4 }); fx.burst(c.x, c.y, { count: 40, kinds: ['star', 'confetti', 'heart'], speed: 520, up: 160 }); }
+    if (!S.reduced) { fx.text(c.x, c.y - 30, `Серия ${pn(offer.run, 'day')} сохранена!`, { color: '#ff7ab6', size: 26, vy: -70, life: 1.4 }); fx.burst(c.x, c.y, { count: 40, kinds: ['star', 'confetti', 'heart'], speed: 520, up: 160 }); }
     audio.unit(0.6);
     popEl(badge, 0.5, 400);
   }
@@ -2365,12 +2369,12 @@ function moveMonth(dir) {
 function openDay(key) {
   const [y, m, d] = key.split('-').map(Number);
   const list = store.monthSummary(y, m - 1)[key]?.entries || [];
-  $('#day-title').textContent = `${m}月${d}日のきろく`;
+  $('#day-title').textContent = `Записи за ${ruDate(m, d)}`;
   $('#day-list').innerHTML = list.slice().reverse().map((h) => {
     const t = new Date(h.at);
     const name = (MODE_NAMES[h.mode] || (() => h.mode))(h);
-    const extra = h.extraOk ? `　エクストラ ${h.extraOk}問` : '';
-    return `<li><span class="t">${t.getHours()}:${String(t.getMinutes()).padStart(2, '0')}</span><span class="m">${name}</span><span class="s">${(h.score || 0).toLocaleString('ja-JP')}点</span><span class="d">正解 ${h.ok ?? '-'}　おしい ${h.ng ?? '-'}${extra}　${fmtTime(h.timeMs || 0)}</span></li>`;
+    const extra = h.extraOk ? ` · экстра ${h.extraOk}` : '';
+    return `<li><span class="t">${t.getHours()}:${String(t.getMinutes()).padStart(2, '0')}</span><span class="m">${name}</span><span class="s">${(h.score || 0).toLocaleString('ru-RU')} очков</span><span class="d">верно ${h.ok ?? '-'} · почти ${h.ng ?? '-'}${extra} · ${fmtTime(h.timeMs || 0)}</span></li>`;
   }).join('');
   $('#day-log').hidden = false;
   audio.unlock();
@@ -2407,13 +2411,13 @@ function askReset() {
   if (S.demo || !S.settingsOpen) return;
   closeSettings();
   openConfirm({
-    title: 'すべて リセット',
-    msg: 'きろく・スキル・トロフィー・コレクション・シール・せっていを ぜんぶ けします。',
-    yes: 'けす', no: 'やめる', focusBack: $('#open-settings'),
+    title: 'Сбросить всё',
+    msg: 'Удалятся все записи, навыки, трофеи, коллекция, наклейки и настройки.',
+    yes: 'Удалить', no: 'Отмена', focusBack: $('#open-settings'),
     onYes: () => openConfirm({
-      title: 'ほんとうに けしますか？',
-      msg: 'けしたら もとに もどせません。',
-      yes: 'ぜんぶ けす', no: 'やめる', urgent: true, focusBack: $('#open-settings'),
+      title: 'Точно удалить?',
+      msg: 'Вернуть ничего не получится.',
+      yes: 'Удалить всё', no: 'Отмена', urgent: true, focusBack: $('#open-settings'),
       onYes: () => { store.reset(); location.reload(); },
     }),
   });
@@ -2512,7 +2516,7 @@ $('#tree').addEventListener('click', (e) => {
   const id = b.dataset.id; const st = stateOf(progress(), id);
   if (st === 'locked') {
     const need = SKILL[id].req.filter((q) => stateOf(progress(), q) !== 'mastered').map((q) => `「${SKILL[q].name}」`);
-    toast(`${need.join('と')}を マスターすると ひらくよ`);
+    toast(`Откроется, когда освоишь: ${need.join(', ')}`);
     audio.play('boing', audio.now(), { v: 0.12 });
     if (!S.reduced) tween(300, (k) => { b.style.translate = `${Math.sin(k * 20) * 5 * (1 - k)}px 0`; }).then(() => { b.style.translate = ''; });
     return;

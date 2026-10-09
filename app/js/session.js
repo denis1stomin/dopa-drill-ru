@@ -6,6 +6,7 @@ const LANES_N = LANES.length;
 import { makeProblem, signature } from './problems.js';
 import { comboWindowMs } from './scoring.js';
 import { daysBetween } from './growth.js';
+import { n as pn } from './ru.js';
 
 // Skills in a single easy -> hard order (placement walks along it).
 export const ORDER = SKILLS.slice().sort((a, b) => DEPTH[a.id] - DEPTH[b.id] || a.grade - b.grade || SKILLS.indexOf(a) - SKILLS.indexOf(b)).map((s) => s.id);
@@ -165,20 +166,20 @@ export function nextStar(prog, id, today = null) {
   const R = STAR_RULE;
   const times = r.times || [];
   const cells = times.length ? Math.round(times.slice(-10).reduce((a, e) => a + e.c, 0) / Math.min(10, times.length)) : 1;
-  const sec = (k) => Math.round((baseMs(grade, cells) * k) / 100) / 10;
+  const sec = (k) => String(Math.round((baseMs(grade, cells) * k) / 100) / 10).replace('.', ',');
   const pct = (l) => Math.round(rate(l) * 100);
-  const cur = (l) => { const v = speedOf(l, grade); return Number.isFinite(v) ? Math.round((v * baseMs(grade, cells)) / 100) / 10 : null; };
+  const cur = (l) => { const v = speedOf(l, grade); return Number.isFinite(v) ? String(Math.round((v * baseMs(grade, cells)) / 100) / 10).replace('.', ',') : null; };
   const n = s + 1;
-  if (n === 2) { const l = times.slice(-R.accN); return { n, text: `さいきん ${R.accN}もんの 初回正解が ${R.acc * 100}% いじょう`, now: `いま ${l.length}もん・${pct(l)}%` }; }
-  if (n === 3) { const l = times.slice(-R.speedN); const c = cur(l); return { n, text: `1もんを だいたい ${sec(1)}びょう いないで とく`, now: c == null ? `いま ${l.length}もん` : `いま ${c}びょう（${l.length}/${R.speedN}もん）` }; }
+  if (n === 2) { const l = times.slice(-R.accN); return { n, text: `Из последних ${R.accN} примеров ${R.acc * 100}% и больше — с первого раза`, now: `сейчас ${pn(l.length, 'problem')} · ${pct(l)}%` }; }
+  if (n === 3) { const l = times.slice(-R.speedN); const c = cur(l); return { n, text: `Решать пример примерно за ${sec(1)} сек или быстрее`, now: c == null ? `сейчас ${pn(l.length, 'problem')}` : `сейчас ${c} сек (${l.length}/${R.speedN})` }; }
   if (n === 4) {
     const since = r.starDay && r.starDay[3];
     const ref = today || (times.length ? times[times.length - 1].d : since);
     const wait = since && ref ? Math.max(0, R.gapDays - daysBetween(since, ref)) : R.gapDays;
-    return { n, text: `☆3から ${R.gapDays}日 たってから、${R.holdRun}もん つづけて 初回正解`, now: wait ? `あと ${wait}日 まってね` : 'きょうから ちょうせん できるよ' };
+    return { n, text: `Через ${pn(R.gapDays, 'day')} после ☆3 решить ${pn(R.holdRun, 'problem')} подряд с первого раза`, now: wait ? `подожди ещё ${pn(wait, 'day')}` : 'можно пробовать уже сегодня' };
   }
   const l = times.slice(-R.topN); const c = cur(l);
-  return { n, text: `さいきん ${R.topN}もんの 初回正解が ${R.top * 100}% いじょうで、1もん ${sec(R.topSpeed)}びょう いない`, now: `いま ${pct(l)}%${c == null ? '' : `・${c}びょう`}` };
+  return { n, text: `Из последних ${R.topN} примеров ${R.top * 100}% и больше — с первого раза, и пример за ${sec(R.topSpeed)} сек`, now: `сейчас ${pct(l)}%${c == null ? '' : ` · ${c} сек`}` };
 }
 
 function noteTiming(r, firstTry, { day, ms, cells = 1, misses = 0, problem = null }, at) {

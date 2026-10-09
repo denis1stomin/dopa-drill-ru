@@ -4,19 +4,20 @@ import assert from 'node:assert/strict';
 import { makeRng, makeProblem, signature } from '../app/js/problems.js';
 import { SKILLS } from '../app/js/skills.js';
 
-const num = (s) => Number(String(s).replace(/,/g, ''));
+// Russian notation: decimal comma, ":" for division, "(ост. r)" remainders.
+const num = (s) => Number(String(s).replace(',', '.'));
 // Evaluate "a op b" texts produced by the generators.
 function evalText(t) {
-  const m = String(t).match(/^([\d.]+) ([+−×÷]) ([\d.]+)$/);
+  const m = String(t).match(/^([\d,]+) ([+−×:]) ([\d,]+)$/);
   if (!m) return null;
   const a = num(m[1]); const b = num(m[3]);
-  return { '+': a + b, '−': a - b, '×': a * b, '÷': a / b }[m[2]];
+  return { '+': a + b, '−': a - b, '×': a * b, ':': a / b }[m[2]];
 }
 
 function checkLayout(p) {
   const occ = new Map();
   for (const c of p.cells) {
-    if (c.kind === 'dot' || (c.kind === 'auto' && c.text === '.')) continue;
+    if (c.kind === 'dot' || (c.kind === 'auto' && c.text === ',')) continue;
     for (let dr = 0; dr < (c.rs || 1); dr++) for (let dc = 0; dc < (c.cs || 1); dc++) {
       const k = `${c.r + dr},${c.c + dc}`;
       // Empty borrow-mark placeholders may share nothing either.
@@ -40,21 +41,21 @@ function checkAnswer(p) {
   if (p.kind === 'add' || p.kind === 'sub' || p.kind === 'mul') {
     const row = Math.max(...p.steps.map((s) => p.cells.find((c) => c.id === s.cell).r));
     const res = p.cells.filter((c) => c.r === row && c.kind === 'input').sort((a, b) => a.c - b.c).map((c) => c.text).join('');
-    assert.equal(res, p.answer.replace('.', ''), `${p.skill} ${p.text}`);
+    assert.equal(res, p.answer.replace(',', ''), `${p.skill} ${p.text}`);
     const v = evalText(p.text);
     assert.ok(Math.abs(v - num(p.answer)) < 1e-9, `${p.skill} ${p.text} = ${p.answer} (expected ${v})`);
   } else if (p.kind === 'div') {
-    const q = p.cells.filter((c) => c.r === 0 && c.kind === 'input').sort((a, b) => a.c - b.c).map((c) => c.text).join('');
+    const q = p.cells.filter((c) => c.id.startsWith('q')).sort((a, b) => a.c - b.c).map((c) => c.text).join('');
     assert.equal(Number(q), Math.floor(p.a / p.b), p.text);
     assert.equal(p.rem, p.a % p.b, p.text);
   } else {
-    const expect = p.answer.replace(/ あまり /, '').replace(/と/, '').replace('.', '');
-    // Fractions are typed denominator first.
-    const fr = p.answer.match(/^(?:(\d+)と)?(\d+)\/(\d+)$/);
+    const expect = p.answer.replace(/ \(ост\. (\d+)\)$/, '$1').replace(',', '');
+    // Fractions are typed denominator first; mixed numbers read "2 1/3".
+    const fr = p.answer.match(/^(?:(\d+) )?(\d+)\/(\d+)$/);
     const want = fr ? `${fr[1] || ''}${fr[3]}${fr[2]}` : expect;
     assert.equal(typed, want, `${p.skill} ${p.text} -> ${p.answer}`);
     const v = evalText(p.text);
-    if (v !== null && !p.answer.includes('あまり')) assert.ok(Math.abs(v - num(p.answer)) < 1e-9, `${p.skill} ${p.text} = ${p.answer}`);
+    if (v !== null && !p.answer.includes('ост.')) assert.ok(Math.abs(v - num(p.answer)) < 1e-9, `${p.skill} ${p.text} = ${p.answer}`);
   }
 }
 
