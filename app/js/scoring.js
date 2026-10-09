@@ -13,7 +13,7 @@ export const extraTotal = (n) => EXTRA_BASE * n + EXTRA_STEP * (n * (n - 1)) / 2
 // curves below are what a player with no combo gets; combos multiply each
 // step (see comboMult), so a steady combo lands back near the old targets.
 // Without combo the basic set ends near 10^2.3 (about 200); a full combo
-// doubles every step after 20 cells and ends near 1万.
+// doubles every step after 20 cells and ends near 10 тыс.
 export const BASIC_DOPA_L = 2.3;
 export function basicDopaL(frac) {
   const f = Math.min(1, Math.max(0, frac));
@@ -23,7 +23,7 @@ export function basicDopaL(frac) {
 const EXTRA_SPAN = 3.0; const EXTRA_TAU = 10;
 export const extraDopaL = (n) => BASIC_DOPA_L + EXTRA_SPAN * (1 - Math.exp(-n / EXTRA_TAU));
 export const extraProblemGain = (k) => extraDopaL(k + 1) - extraDopaL(k);
-// Hard ceiling: about 12億, whatever the combo.
+// Hard ceiling: about 1,2 млрд, whatever the combo.
 export const DOPA_MAX_L = 9.08;
 
 // ---------------------------------------------------------------- combo
@@ -50,25 +50,27 @@ export function comboWindowMs(grade = 3, first = false) {
 // Milestones worth a bigger show: 10, 20, 30, 50, 75, 100, then every 50.
 export const comboMilestone = (c) => [10, 20, 30, 50, 75].includes(c) || (c >= 100 && c % 50 === 0);
 
-const UNITS = [[68, '無量大数'], [64, '不可思議'], [60, '那由他'], [56, '阿僧祇'], [52, '恒河沙'], [48, '極'], [44, '載'], [40, '正'], [36, '澗'], [32, '溝'], [28, '穣'], [24, '秭'], [20, '垓'], [16, '京'], [12, '兆'], [8, '億'], [4, '万']];
-// Milestones below 万 are celebrated but not used as display units.
-const MILESTONES = [[3, '千'], [2, '百']];
+// Russian short scale: тысяча, миллион, миллиард, ...
+const UNITS = [[33, 'дец.'], [30, 'нон.'], [27, 'окт.'], [24, 'септ.'], [21, 'секст.'], [18, 'квинт.'], [15, 'квадр.'], [12, 'трлн'], [9, 'млрд'], [6, 'млн'], [3, 'тыс.']];
 
+// Below 10 000 the number is shown whole; above, with a unit: "31 тыс.", "1,6 млн".
 export function fmtDopa(L) {
-  if (!Number.isFinite(L) || L >= 72) return '∞';
-  if (L < 4) return Math.round(10 ** L).toLocaleString('ja-JP');
+  if (!Number.isFinite(L) || L >= 36) return '∞';
+  if (L < 4) return Math.round(10 ** L).toLocaleString('ru-RU');
   const u = UNITS.find(([e]) => L >= e - 1e-9);
   const m = 10 ** (L - u[0]);
-  return (m < 10 ? m.toFixed(1) : String(Math.floor(m))) + u[1];
+  return `${m < 10 ? m.toFixed(1).replace('.', ',') : String(Math.floor(m))} ${u[1]}`;
 }
 
+// Milestones: every power of ten from 100 (100, 1000, 10 тыс., 100 тыс., 1 млн, ...).
+// The milestone is its own label.
 export function unitOf(L) {
-  if (L >= 72) return '∞';
-  // Between 万 and 億, each extra digit is its own milestone (10万, 100万, 1000万).
-  if (L >= 4 && L < 8) return ['万', '十万', '百万', '千万'][Math.floor(L + 1e-9) - 4];
-  const u = UNITS.find(([e]) => L >= e - 1e-9) || MILESTONES.find(([e]) => L >= e - 1e-9);
-  return u ? u[1] : '';
+  if (!Number.isFinite(L) || L >= 36) return '∞';
+  if (L < 2 - 1e-9) return '';
+  const e = Math.floor(L + 1e-9);
+  if (e < 4) return String(10 ** e);
+  const u = UNITS.find(([x]) => e >= x);
+  return `${10 ** (e - u[0])} ${u[1]}`;
 }
 
-const LABELS = { '∞': '∞', 百: '100', 千: '1000', 十万: '10万', 百万: '100万', 千万: '1000万' };
-export const unitLabel = (u) => LABELS[u] || `1${u}`;
+export const unitLabel = (u) => u;

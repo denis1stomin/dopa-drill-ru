@@ -68,8 +68,8 @@ button:focus-visible { outline: 4px solid var(--yellow); outline-offset: 3px; }
 /* ------------------------------------------------------------ title */
 #screen-title { flex-direction: column; align-items: center; justify-content: flex-start; gap: 14px; padding: calc(28px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; }
 #screen-title > * { flex: none; }
-/* Logo: layered paper cut-outs. A spinning burst sits behind "ドパ",
-   "ドリル" rides on a folded ribbon, operator scraps float around. */
+/* Logo: layered paper cut-outs. A spinning burst sits behind "ДОПА",
+   "ДРИЛЛ" rides on a folded ribbon, operator scraps float around. */
 .logo { position: relative; margin: calc(var(--fs) * 0.62) 0 calc(var(--fs) * 0.2); display: grid; justify-items: center; font-family: var(--chunky); font-weight: 400; line-height: 1; --fs: clamp(64px, 21vw, 96px); }
 .logo-burst { position: absolute; left: 50%; top: calc(var(--fs) * 0.52); width: calc(var(--fs) * 2.7); height: calc(var(--fs) * 2.7); transform: translate(-50%, -50%) rotate(calc(var(--spin, 0) * 1deg)); z-index: -1; filter: drop-shadow(0 6px 0 rgba(27, 29, 77, .9)); }
 .logo-top { display: flex; gap: .02em; font-size: var(--fs); letter-spacing: -.04em; }
@@ -89,11 +89,17 @@ button:focus-visible { outline: 4px solid var(--yellow); outline-offset: 3px; }
 .logo-top i:nth-child(2) { --r: 7deg; --dy: -6px; animation-delay: -.8s; }
 .logo-top i::after { content: attr(data-c); position: absolute; inset: 0; color: var(--blue); clip-path: polygon(0 62%, 100% 50%, 100% 100%, 0 100%); text-shadow: none; }
 .logo-top i:nth-child(2)::after { color: var(--pink); }
+/* Russian edition: four letters on top. */
+.logo-top { font-size: calc(var(--fs) * .74); }
+.logo-top i:nth-child(3) { --r: -4deg; --dy: -2px; animation-delay: -.4s; }
+.logo-top i:nth-child(4) { --r: 9deg; --dy: -5px; animation-delay: -1.2s; }
+.logo-top i:nth-child(4)::after { color: var(--pink); }
 .logo-ribbon { position: relative; display: flex; justify-content: center; gap: .1em; margin-top: calc(var(--fs) * 0.04); padding: .12em .9em .2em; font-size: calc(var(--fs) * 0.52); color: #fff; transform: rotate(-3deg); }
 .ribbon-bg { position: absolute; inset: -6% -14% -10%; width: 128%; height: 116%; z-index: -1; filter: drop-shadow(0 5px 0 var(--ink)); }
 .logo-ribbon i { text-shadow: 2px 0 0 var(--ink), -2px 0 0 var(--ink), 0 2px 0 var(--ink), 0 -2px 0 var(--ink), 0 4px 0 var(--ink); animation: logo-wave 1.6s ease-in-out infinite; }
 .logo-ribbon i:nth-child(3) { animation-delay: -.25s; }
 .logo-ribbon i:nth-child(4) { animation-delay: -.5s; }
+.logo-ribbon i:nth-child(5) { animation-delay: -.75s; }
 .logo-bits { position: absolute; inset: 0; pointer-events: none; }
 .logo-bits b { position: absolute; left: calc(50% + var(--x)); top: var(--y); font-size: calc(var(--fs) * 0.4); color: var(--c); transform: translate(-50%, -50%) rotate(var(--r)); text-shadow: 2px 0 0 var(--ink), -2px 0 0 var(--ink), 0 2px 0 var(--ink), 0 -2px 0 var(--ink), 3px 4px 0 var(--ink); animation: logo-float 2.4s ease-in-out infinite; }
 .logo-bits b:nth-child(2) { animation-delay: -.6s; }
@@ -151,7 +157,9 @@ body.reduced .logo *, body.reduced .logo-burst { animation: none !important; }
 .toggle i { font-style: normal; font-size: 16px; }
 .toggle b { font-weight: 900; color: var(--blue); }
 .toggle[aria-pressed="true"][data-toggle="motion"] b { color: var(--pink); }
-.hint { margin: 0; font-size: 12px; opacity: .6; }
+.hint { margin: 0; font-size: 12px; opacity: .6; text-align: center; }
+.hint.unofficial { margin-top: 4px; font-size: 11px; }
+.hint.unofficial a { color: inherit; }
 
 /* ------------------------------------------------------------ play */
 #screen-play { flex-direction: column; padding: 8px 0 calc(10px + env(safe-area-inset-bottom)); }
@@ -250,6 +258,9 @@ body.reduced .cell.hint-glow { animation: none; }
 .hline { position: relative; align-self: end; height: 3.5px; background: var(--ink); border-radius: 2px; margin-bottom: -2px; transform-origin: left center; }
 .hline.hidden { visibility: hidden; }
 .bracket { position: relative; border-top: 3.5px solid var(--ink); margin-left: 4px; }
+/* Russian long division: a corner left of the divisor, a line under it. */
+.corner { position: relative; border-left: 3.5px solid var(--ink); margin-left: 2px; }
+.corner::after { content: ""; position: absolute; left: 0; right: 0; top: calc(50% - 1.75px); border-top: 3.5px solid var(--ink); }
 .bracket::before { content: ""; position: absolute; left: -14px; top: -3.5px; width: 14px; height: calc(100% + 4px); border-right: 3.5px solid var(--ink); border-radius: 0 70% 70% 0 / 0 50% 50% 0; }
 .step-label { margin: 2px 0 0; text-align: center; font-size: 14px; min-height: 20px; }
 .step-label b { color: var(--blue); }
@@ -351,8 +362,9 @@ body.reduced .logo span, body.reduced .spot, body.reduced .marquee, body.reduced
 .cal-streak b { font-family: var(--chunky); font-weight: 400; font-size: 20px; margin: 0 2px; }
 .cal-week, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
 .cal-week span { text-align: center; font-size: 11px; font-weight: 900; opacity: .6; }
-.cal-week span:first-child { color: var(--red); }
-.cal-week span:last-child { color: var(--blue); }
+/* Weeks start on Monday: Saturday blue, Sunday red. */
+.cal-week span:nth-child(6) { color: var(--blue); }
+.cal-week span:last-child { color: var(--red); }
 .cal-day { position: relative; aspect-ratio: 1 / 1.08; min-height: 40px; padding: 0; border: 0; border-radius: 10px; background: var(--paper); font-size: 11px; font-weight: 900; color: var(--ink); }
 .cal-day .n { position: absolute; left: 4px; top: 2px; opacity: .55; }
 .cal-day.blank { background: transparent; }
@@ -410,6 +422,8 @@ body.reduced .logo span, body.reduced .spot, body.reduced .marquee, body.reduced
 .tree-links path.grow { stroke: var(--pink); stroke-width: 5; }
 .node { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 3px 3px; border: 2.5px solid var(--ink); border-radius: 14px; background: #fff; box-shadow: 0 3px 0 var(--ink); font-size: 10.5px; font-weight: 900; line-height: 1.15; text-align: center; color: var(--ink); word-break: keep-all; overflow-wrap: anywhere; }
 .node .g { font-size: 9px; opacity: .6; }
+/* Russian words are long: let the browser hyphenate inside a node. */
+.node > span:not(.g) { hyphens: auto; -webkit-hyphens: auto; overflow-wrap: anywhere; }
 .node .ring { position: absolute; left: 4px; right: 4px; bottom: 3px; height: 4px; border-radius: 3px; background: linear-gradient(90deg, var(--pink) calc(var(--p) * 100%), #eee calc(var(--p) * 100%)); }
 .node.locked { background: #eceaf3; color: #8a8cb0; border-color: #a9abc9; box-shadow: 0 3px 0 #a9abc9; }
 .node.locked::before { content: ""; position: absolute; top: -8px; right: -6px; width: 16px; height: 13px; border-radius: 3px; background: #a9abc9; box-shadow: inset 0 0 0 2px #8a8cb0; }
@@ -650,7 +664,7 @@ li.done .qbar { background: var(--mint); }
 .skill-news p.capsule-news b { margin-right: 8px; color: #e08a2a; }
 .cr-new i, .gb-new small { font-family: var(--round); line-height: 1.3; margin-bottom: 1px; }
 .cr-new, .gb-new em { line-height: 1; }
-/* id050: review sits right under じぶんレベル. */
+/* id050: review sits right under "Мой уровень". */
 .modes > .review-main { min-width: 240px; font-weight: 900; }
 .modes > .review-main[hidden] { display: none; }
 
@@ -697,7 +711,7 @@ li.done .qbar { background: var(--mint); }
 .finale-rocket { position: absolute; left: 0; top: 0; width: 180px; height: 120px; transform-origin: 90px 60px; filter: drop-shadow(0 6px 0 rgba(27, 29, 77, .8)); }
 .finale-rocket svg { width: 100%; height: 100%; }
 .finale-banner { position: absolute; left: 0; top: 0; width: 180px; padding: 8px 0; border: 4px solid var(--ink); border-radius: 12px; background: #fff; color: var(--pink); font-family: var(--chunky); font-size: 30px; text-align: center; box-shadow: 0 6px 0 var(--ink); }
-/* id045: "もうすぐ" — the closest next steps. */
+/* id045: "Скоро" — the closest next steps. */
 .tr-soon { display: grid; grid-template-columns: 40px 1fr 56px; align-items: center; gap: 10px; margin-bottom: 8px; padding: 7px 10px 7px 7px; border: 2.5px solid var(--ink); border-radius: 16px; background: #fff; box-shadow: 0 3px 0 var(--ink); }
 .tr-pct { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: conic-gradient(var(--pink) calc(var(--p) * 360deg), #eceaf3 0); }
 .tr-pct b { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #fff; font-family: var(--chunky); font-weight: 400; font-size: 12px; }

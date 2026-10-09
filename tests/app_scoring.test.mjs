@@ -40,12 +40,12 @@ test('combo multiplier rises evenly to x2.0 at 20 and stays there (id046)', () =
   assert.ok(!comboMaxed(19) && comboMaxed(20));
   const plain = run({ extras: 5, combo: false }); const full = run({ extras: 5 });
   assert.ok(full.afterBasic > plain.afterBasic && full.L > plain.L);
-  assert.ok(full.afterBasic > 3.8 && full.afterBasic < 4.1, `basic with combo: ${fmtDopa(full.afterBasic)}`); // about 1万
+  assert.ok(full.afterBasic > 3.8 && full.afterBasic < 4.1, `basic with combo: ${fmtDopa(full.afterBasic)}`); // about 10 тыс.
 });
 
-test('even a very fast full-combo run stays at a few 億 and never passes the ceiling (id046)', () => {
+test('even a very fast full-combo run stays at a few hundred млн and never passes the ceiling (id046)', () => {
   const fast = run({ extras: 23 });
-  assert.match(fmtDopa(fast.L), /億$/);
+  assert.match(fmtDopa(fast.L), /^\d{3} млн$/);
   assert.ok(fast.L < 8.8, `23 extras: ${fmtDopa(fast.L)}`);
   assert.ok(run({ extras: 200 }).L <= DOPA_MAX_L);
   assert.ok(run({ extras: 200, combo: false }).L < DOPA_MAX_L);
@@ -61,17 +61,19 @@ test('combo time limit grows with the grade and adds reading time on the first c
 test('basic curve rises monotonically from small numbers', () => {
   let prev = -1;
   for (let i = 0; i <= 40; i++) { const L = basicDopaL(i / 40); assert.ok(L > prev); prev = L; }
-  assert.equal(fmtDopa(basicDopaL(0.5)), Math.round(10 ** basicDopaL(0.5)).toLocaleString('ja-JP'));
+  assert.equal(fmtDopa(basicDopaL(0.5)), Math.round(10 ** basicDopaL(0.5)).toLocaleString('ru-RU'));
 });
 
-test('milestone units below 万', () => {
+test('milestones are the powers of ten, labelled the Russian way', () => {
   assert.equal(unitOf(1.9), '');
-  assert.equal(unitOf(2.1), '百');
-  assert.equal(unitOf(3.5), '千');
-  assert.equal(unitOf(4.5), '万');
-  assert.equal(unitOf(6.2), '百万');
-  assert.equal(unitLabel('千万'), '1000万');
-  assert.equal(unitOf(8.3), '億');
-  assert.equal(unitLabel('百'), '100');
-  assert.equal(unitLabel('億'), '1億');
+  assert.equal(unitOf(2.1), '100');
+  assert.equal(unitOf(3.5), '1000');
+  assert.equal(unitOf(4.5), '10 тыс.');
+  assert.equal(unitOf(6.2), '1 млн');
+  assert.equal(unitOf(7.4), '10 млн');
+  assert.equal(unitOf(8.3), '100 млн');
+  assert.equal(unitOf(9.05), '1 млрд');
+  assert.equal(unitLabel('10 млн'), '10 млн');
+  assert.equal(fmtDopa(4.5), '31 тыс.');
+  assert.equal(fmtDopa(6.2), '1,6 млн');
 });

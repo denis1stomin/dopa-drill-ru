@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="ja">
+<html lang="ru">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#3b6bff">
-  <meta name="description" content="算数を解くたびに、演出と音がどんどんインフレするドリル。">
-  <title>ドパドリル</title>
+  <meta name="description" content="Неофициальная русская версия Dopa Drill: тренажёр по математике, где каждый решённый пример добавляет музыки и праздника.">
+  <title>Допа Дрилл</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
   <script type="module" src="js/main.js"></script>
@@ -19,58 +19,59 @@
   <main id="app">
     <!-- Title -->
     <section id="screen-title" class="screen is-active" aria-labelledby="logo">
-      <button type="button" class="icon-btn settings-btn" id="open-settings" aria-label="せってい" aria-haspopup="dialog">
+      <button type="button" class="icon-btn settings-btn" id="open-settings" aria-label="Настройки" aria-haspopup="dialog">
         <svg viewBox="-16 -16 32 32" aria-hidden="true"><circle r="10.6" fill="none" stroke="#1b1d4d" stroke-width="9" stroke-dasharray="4.2 4.12"/><circle r="10.6" fill="#ffd23f" stroke="#1b1d4d" stroke-width="2.4"/><circle r="4.4" fill="#fff" stroke="#1b1d4d" stroke-width="2.4"/></svg>
       </button>
-      <button type="button" class="icon-btn settings-btn help-btn" id="open-guide" aria-label="あそびかた" aria-haspopup="dialog">
+      <button type="button" class="icon-btn settings-btn help-btn" id="open-guide" aria-label="Как играть" aria-haspopup="dialog">
         <svg viewBox="-16 -16 32 32" aria-hidden="true"><path d="M-6 -4 C-6 -7 -3 -9 0 -9 C3 -9 6 -7 6 -4 C6 -1 0 0 0 3 M0 9v.01" fill="none" stroke="#1b1d4d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
-      <h1 id="logo" class="logo" aria-label="ドパドリル">
+      <h1 id="logo" class="logo" aria-label="Допа Дрилл">
         <svg class="logo-burst" viewBox="-100 -100 200 200" aria-hidden="true"><path id="logo-burst-path" fill="#ffd23f" stroke="#1b1d4d" stroke-width="5" stroke-linejoin="round"/><path id="logo-burst-inner" fill="#ff7ab6" stroke="#1b1d4d" stroke-width="4" stroke-linejoin="round"/></svg>
-        <span class="logo-top" aria-hidden="true"><i data-c="ド">ド</i><i data-c="パ">パ</i></span>
-        <span class="logo-ribbon" aria-hidden="true"><svg class="ribbon-bg" viewBox="0 0 300 70" preserveAspectRatio="none"><path d="M4 22 L34 16 L28 36 L40 58 L6 62 L18 42Z" fill="#2a4fd6" stroke="#1b1d4d" stroke-width="4" stroke-linejoin="round"/><path d="M296 22 L266 16 L272 36 L260 58 L294 62 L282 42Z" fill="#2a4fd6" stroke="#1b1d4d" stroke-width="4" stroke-linejoin="round"/><path d="M30 10 Q150 -4 270 10 L270 56 Q150 42 30 56Z" fill="#3b6bff" stroke="#1b1d4d" stroke-width="4.5" stroke-linejoin="round"/><path d="M42 18 Q150 6 258 18" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="7 6" stroke-linecap="round" opacity=".7"/></svg><i>ド</i><i>リ</i><i>ル</i></span>
-        <span class="logo-bits" aria-hidden="true"><b style="--x:-46%;--y:4%;--r:-18deg;--c:#3fdcb0">＋</b><b style="--x:44%;--y:-2%;--r:14deg;--c:#a77bff">×</b><b style="--x:-34%;--y:104%;--r:10deg;--c:#ff4f6d">÷</b><b style="--x:36%;--y:102%;--r:-12deg;--c:#ffd23f">−</b></span>
+        <span class="logo-top" aria-hidden="true"><i data-c="Д">Д</i><i data-c="О">О</i><i data-c="П">П</i><i data-c="А">А</i></span>
+        <span class="logo-ribbon" aria-hidden="true"><svg class="ribbon-bg" viewBox="0 0 300 70" preserveAspectRatio="none"><path d="M4 22 L34 16 L28 36 L40 58 L6 62 L18 42Z" fill="#2a4fd6" stroke="#1b1d4d" stroke-width="4" stroke-linejoin="round"/><path d="M296 22 L266 16 L272 36 L260 58 L294 62 L282 42Z" fill="#2a4fd6" stroke="#1b1d4d" stroke-width="4" stroke-linejoin="round"/><path d="M30 10 Q150 -4 270 10 L270 56 Q150 42 30 56Z" fill="#3b6bff" stroke="#1b1d4d" stroke-width="4.5" stroke-linejoin="round"/><path d="M42 18 Q150 6 258 18" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="7 6" stroke-linecap="round" opacity=".7"/></svg><i>Д</i><i>Р</i><i>И</i><i>Л</i><i>Л</i></span>
+        <span class="logo-bits" aria-hidden="true"><b style="--x:-46%;--y:4%;--r:-18deg;--c:#3fdcb0">+</b><b style="--x:44%;--y:-2%;--r:14deg;--c:#a77bff">×</b><b style="--x:-34%;--y:104%;--r:10deg;--c:#ff4f6d">÷</b><b style="--x:36%;--y:102%;--r:-12deg;--c:#ffd23f">−</b></span>
       </h1>
       <div class="title-stage" id="title-stage" aria-hidden="true"></div>
       <div class="modes" id="modes">
-        <button type="button" id="start" class="big-btn level-btn">じぶんレベル<small id="level-sub">はじめは じつりょくチェック</small></button>
-        <button type="button" id="start-review" class="sub-btn review-btn review-main" hidden>ふくしゅう <b id="review-count">0</b></button>
-        <div class="grades" role="group" aria-label="学年べつ">
-          <button type="button" data-grade="1">1<small>ねんせい</small></button><button type="button" data-grade="2">2<small>ねんせい</small></button><button type="button" data-grade="3">3<small>ねんせい</small></button>
-          <button type="button" data-grade="4">4<small>ねんせい</small></button><button type="button" data-grade="5">5<small>ねんせい</small></button><button type="button" data-grade="6">6<small>ねんせい</small></button>
+        <button type="button" id="start" class="big-btn level-btn">Мой уровень<small id="level-sub">сначала проверка уровня</small></button>
+        <button type="button" id="start-review" class="sub-btn review-btn review-main" hidden>Работа над ошибками <b id="review-count">0</b></button>
+        <div class="grades" role="group" aria-label="По классам">
+          <button type="button" data-grade="1">1<small> класс</small></button><button type="button" data-grade="2">2<small> класс</small></button><button type="button" data-grade="3">3<small> класс</small></button>
+          <button type="button" data-grade="4">4<small> класс</small></button><button type="button" data-grade="5">5<small> класс</small></button><button type="button" data-grade="6">6<small> класс</small></button>
         </div>
         <div class="mode-row">
-          <button type="button" id="open-tree" class="sub-btn">スキルツリー <b id="tree-badge"></b></button>
-          <button type="button" id="open-trophy" class="sub-btn">トロフィー <b id="trophy-badge"></b></button>
-          <button type="button" id="open-collect" class="sub-btn">コレクション <b id="collect-badge"></b></button>
+          <button type="button" id="open-tree" class="sub-btn">Навыки <b id="tree-badge"></b></button>
+          <button type="button" id="open-trophy" class="sub-btn">Трофеи <b id="trophy-badge"></b></button>
+          <button type="button" id="open-collect" class="sub-btn">Коллекция <b id="collect-badge"></b></button>
         </div>
       </div>
       <section class="quest-card" id="quests" aria-labelledby="quest-title">
-        <div class="quest-head"><h2 id="quest-title">きょうの クエスト</h2><span class="quest-reward" id="quest-reward"></span></div>
+        <div class="quest-head"><h2 id="quest-title">Задания на сегодня</h2><span class="quest-reward" id="quest-reward"></span></div>
         <ol class="quest-list" id="quest-list"></ol>
       </section>
       <section class="cal-card" id="calendar" aria-labelledby="cal-title">
         <div class="cal-head">
-          <button type="button" class="cal-nav" id="cal-prev" aria-label="前の月">‹</button>
-          <h2 id="cal-title">カレンダー</h2>
-          <button type="button" class="cal-nav" id="cal-next" aria-label="次の月">›</button>
+          <button type="button" class="cal-nav" id="cal-prev" aria-label="Предыдущий месяц">‹</button>
+          <h2 id="cal-title">Календарь</h2>
+          <button type="button" class="cal-nav" id="cal-next" aria-label="Следующий месяц">›</button>
         </div>
         <div class="cal-badges" id="cal-badges"></div>
-        <div class="cal-week" aria-hidden="true"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
+        <div class="cal-week" aria-hidden="true"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div>
         <div class="cal-grid" id="cal-grid" role="grid"></div>
       </section>
-      <p class="hint">数字キーとBackspaceでも操作できます</p>
+      <p class="hint">На компьютере можно вводить цифры с клавиатуры и стирать Backspace</p>
+      <p class="hint unofficial">Неофициальная русская версия игры <a href="https://github.com/grmchn/dopa-drill" target="_blank" rel="noopener">Dopa Drill (ドパドリル)</a> автора gear_machine</p>
     </section>
 
     <!-- Skill tree -->
     <section id="screen-tree" class="screen" aria-labelledby="tree-title">
       <header class="tree-head">
-        <button type="button" class="icon-btn" id="tree-back" aria-label="もどる">‹</button>
-        <h2 id="tree-title">スキルツリー</h2>
+        <button type="button" class="icon-btn" id="tree-back" aria-label="Назад">‹</button>
+        <h2 id="tree-title">Навыки</h2>
         <span class="tree-count" id="tree-count"></span>
       </header>
       <p class="tree-stars" id="tree-stars"></p>
-      <p class="tree-note">タップで れんしゅう（マスターは ☆の じょうけん）　ながおしで けす</p>
+      <p class="tree-note">Нажми — тренировка. Удержи — удалить</p>
       <div class="tree-scroll" id="tree-scroll"><div class="tree-lanes" id="tree-lanes" aria-hidden="true"></div><div class="tree" id="tree"><svg class="tree-links" id="tree-links" aria-hidden="true"></svg></div></div>
       <p class="toast" id="toast" role="status" hidden></p>
     </section>
@@ -78,12 +79,12 @@
     <!-- Trophies (id036) -->
     <section id="screen-trophy" class="screen" aria-labelledby="trophy-title">
       <header class="tree-head">
-        <button type="button" class="icon-btn" id="trophy-back" aria-label="もどる">‹</button>
-        <h2 id="trophy-title">トロフィー</h2>
+        <button type="button" class="icon-btn" id="trophy-back" aria-label="Назад">‹</button>
+        <h2 id="trophy-title">Трофеи</h2>
         <span class="tree-count" id="trophy-count"></span>
       </header>
-      <div class="tr-filter" role="group" aria-label="しぼりこみ">
-        <button type="button" data-f="all" aria-pressed="true">ぜんぶ</button><button type="button" data-f="got" aria-pressed="false">ゲットした</button><button type="button" data-f="next" aria-pressed="false">まだ</button><button type="button" data-f="soon" aria-pressed="false">もうすぐ</button>
+      <div class="tr-filter" role="group" aria-label="Фильтр">
+        <button type="button" data-f="all" aria-pressed="true">Все</button><button type="button" data-f="got" aria-pressed="false">Есть</button><button type="button" data-f="next" aria-pressed="false">Ещё нет</button><button type="button" data-f="soon" aria-pressed="false">Скоро</button>
       </div>
       <div class="tr-scroll" id="tr-scroll"><div class="tr-list" id="tr-list"></div></div>
     </section>
@@ -91,27 +92,27 @@
     <!-- Collection (id041) -->
     <section id="screen-collect" class="screen" aria-labelledby="collect-title">
       <header class="tree-head">
-        <button type="button" class="icon-btn" id="collect-back" aria-label="もどる">‹</button>
-        <h2 id="collect-title">コレクション</h2>
+        <button type="button" class="icon-btn" id="collect-back" aria-label="Назад">‹</button>
+        <h2 id="collect-title">Коллекция</h2>
         <span class="tree-count" id="collect-count"></span>
       </header>
       <div class="co-preview" id="co-preview" aria-hidden="true"><div class="stamp co-mark" id="co-mark"></div><p class="co-now" id="co-now"></p></div>
-      <div class="co-tabs" id="co-tabs" role="group" aria-label="しゅるい"></div>
+      <div class="co-tabs" id="co-tabs" role="group" aria-label="Разделы"></div>
       <div class="co-scroll" id="co-scroll"><p class="co-note" id="co-note"></p><div class="co-grid" id="co-grid"></div></div>
     </section>
 
     <!-- Play -->
-    <section id="screen-play" class="screen" aria-label="プレイ画面">
+    <section id="screen-play" class="screen" aria-label="Игра">
       <header class="hud">
         <div class="pips" id="pips" aria-hidden="true"></div>
-        <div class="clock" aria-live="off"><span id="clock-label">目標 2:40</span><b id="clock">0:00</b></div>
+        <div class="clock" aria-live="off"><span id="clock-label">цель 2:40</span><b id="clock">0:00</b></div>
         <span class="demo-tag" aria-hidden="true">DEMO</span>
-        <button type="button" class="icon-btn" id="mute" aria-label="音を消す" aria-pressed="false">♪</button>
+        <button type="button" class="icon-btn" id="mute" aria-label="выключить звук" aria-pressed="false">♪</button>
       </header>
       <div class="hud2">
-        <div class="tally"><span>正解 <b id="ok">0</b><small id="ok-total">/10</small></span><span class="ng">おしい <b id="ng">0</b></span></div>
-        <div class="combo" id="combo-box" aria-hidden="true"><b id="combo">0</b><small>コンボ</small><span class="combo-mult" id="combo-mult"></span><i class="combo-track"><i id="combo-bar"></i></i></div>
-        <div class="dopa" id="dopa-box"><small>ドパ</small><b id="dopa">0</b></div>
+        <div class="tally"><span>Верно <b id="ok">0</b><small id="ok-total">/10</small></span><span class="ng">Почти <b id="ng">0</b></span></div>
+        <div class="combo" id="combo-box" aria-hidden="true"><b id="combo">0</b><small>комбо</small><span class="combo-mult" id="combo-mult"></span><i class="combo-track"><i id="combo-bar"></i></i></div>
+        <div class="dopa" id="dopa-box"><small>Допа</small><b id="dopa">0</b></div>
       </div>
       <div class="stage" id="stage" aria-hidden="true">
         <svg class="bunting" viewBox="0 0 400 40" preserveAspectRatio="none"><path d="M0 4 Q200 34 400 4" fill="none" stroke="#1b1d4d" stroke-width="2.5"/><g id="flags"></g></svg>
@@ -120,42 +121,42 @@
       </div>
       <section class="card" id="card" aria-labelledby="qtitle">
         <div class="marquee" aria-hidden="true"></div>
-        <div class="card-top"><span class="chip" id="qtitle">たしざん</span><span class="qno" id="qno">第1問</span></div>
-        <div class="sheet-wrap"><div class="sheet" id="sheet" role="group" aria-label="計算"></div></div>
-        <p class="step-label" id="step-label" aria-live="polite">一の位</p>
+        <div class="card-top"><span class="chip" id="qtitle">Сложение</span><span class="qno" id="qno">Пример 1</span></div>
+        <div class="sheet-wrap"><div class="sheet" id="sheet" role="group" aria-label="Пример"></div></div>
+        <p class="step-label" id="step-label" aria-live="polite">единицы</p>
         <div class="stamp" id="stamp" aria-hidden="true"></div>
-        <div class="reach-tag" id="reach-tag" aria-hidden="true">あと1けた</div>
+        <div class="reach-tag" id="reach-tag" aria-hidden="true">Последняя цифра!</div>
       </section>
-      <div class="pad" id="pad" role="group" aria-label="数字の入力">
+      <div class="pad" id="pad" role="group" aria-label="Ввод цифр">
         <button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button>
         <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button>
         <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button>
-        <button type="button" data-key="Backspace" class="del" aria-label="1けた消す">⌫</button><button type="button" data-key="0" class="zero">0</button>
+        <button type="button" data-key="Backspace" class="del" aria-label="Стереть цифру">⌫</button><button type="button" data-key="0" class="zero">0</button>
       </div>
     </section>
 
     <!-- Basic result -->
     <section id="screen-result" class="screen" aria-labelledby="result-title">
       <div class="result-card">
-        <p class="chip" id="result-title">基本クリア</p>
-        <p class="score"><b id="r-score">100</b><span>点</span></p>
+        <p class="chip" id="result-title">Готово!</p>
+        <p class="score"><b id="r-score">100</b><span>очков</span></p>
         <dl class="stats">
-          <div><dt>正解</dt><dd id="r-ok">10問</dd></div>
-          <div><dt>おしい</dt><dd id="r-ng">0回</dd></div>
-          <div><dt>初回正解率</dt><dd id="r-rate">100%</dd></div>
-          <div><dt>タイム</dt><dd id="r-time">1:23</dd></div>
+          <div><dt>Верно</dt><dd id="r-ok">10</dd></div>
+          <div><dt>Почти</dt><dd id="r-ng">0</dd></div>
+          <div><dt>С первого раза</dt><dd id="r-rate">100%</dd></div>
+          <div><dt>Время</dt><dd id="r-time">1:23</dd></div>
         </dl>
-        <p class="dopa-final"><small>ドパ</small><b id="r-dopa">0</b></p>
+        <p class="dopa-final"><small>Допа</small><b id="r-dopa">0</b></p>
         <div class="growth-box" id="r-growth"></div>
         <p class="unlock" id="r-unlock"></p>
         <div class="skill-news" id="r-skills"></div>
         <div class="quest-mini" id="r-quests"></div>
         <div class="actions">
-          <button type="button" id="go-extra" class="big-btn">エクストラへ <small>90秒</small></button>
-          <button type="button" id="go-review" class="sub-btn review-btn" hidden>まちがえた問題を やりなおす</button>
-          <button type="button" id="go-tree" class="sub-btn" hidden>スキルツリーを見る</button>
-          <button type="button" id="go-again" class="sub-btn" hidden>もう一度</button>
-          <button type="button" id="go-title" class="sub-btn">おわる</button>
+          <button type="button" id="go-extra" class="big-btn">В экстру <small>90 сек</small></button>
+          <button type="button" id="go-review" class="sub-btn review-btn" hidden>Исправить ошибки</button>
+          <button type="button" id="go-tree" class="sub-btn" hidden>Открыть навыки</button>
+          <button type="button" id="go-again" class="sub-btn" hidden>Ещё раз</button>
+          <button type="button" id="go-title" class="sub-btn">Закончить</button>
         </div>
       </div>
     </section>
@@ -163,22 +164,22 @@
     <!-- Final result -->
     <section id="screen-final" class="screen" aria-labelledby="final-title">
       <div class="result-card">
-        <p class="chip" id="final-title">エクストラ終了</p>
-        <p class="score"><b id="f-score">100</b><span>点</span></p>
-        <p class="breakdown" id="f-break">基本 100 ＋ エクストラ 0</p>
+        <p class="chip" id="final-title">Экстра окончена</p>
+        <p class="score"><b id="f-score">100</b><span>очков</span></p>
+        <p class="breakdown" id="f-break">основа 100 + экстра 0</p>
         <dl class="stats">
-          <div><dt>エクストラ正解</dt><dd id="f-ok">0問</dd></div>
-          <div><dt>エクストラのおしい</dt><dd id="f-ng">0回</dd></div>
-          <div><dt>基本のおしい</dt><dd id="f-bng">0回</dd></div>
-          <div><dt>基本タイム</dt><dd id="f-time">0:00</dd></div>
+          <div><dt>Верно в экстре</dt><dd id="f-ok">0</dd></div>
+          <div><dt>«Почти» в экстре</dt><dd id="f-ng">0</dd></div>
+          <div><dt>«Почти» в основе</dt><dd id="f-bng">0</dd></div>
+          <div><dt>Время основы</dt><dd id="f-time">0:00</dd></div>
         </dl>
-        <p class="dopa-final"><small>ドパ</small><b id="f-dopa">0</b></p>
+        <p class="dopa-final"><small>Допа</small><b id="f-dopa">0</b></p>
         <div class="skill-news" id="f-skills"></div>
         <div class="quest-mini" id="f-quests"></div>
         <div class="actions">
-          <button type="button" id="f-review" class="sub-btn review-btn" hidden>まちがえた問題を やりなおす</button>
-          <button type="button" id="f-tree" class="sub-btn" hidden>スキルツリーを見る</button>
-          <button type="button" id="again" class="big-btn">おわる</button>
+          <button type="button" id="f-review" class="sub-btn review-btn" hidden>Исправить ошибки</button>
+          <button type="button" id="f-tree" class="sub-btn" hidden>Открыть навыки</button>
+          <button type="button" id="again" class="big-btn">Закончить</button>
         </div>
       </div>
     </section>
@@ -187,48 +188,48 @@
   <!-- Settings (above #app, below particles and actors) -->
   <div class="modal" id="settings" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
     <div class="modal-card">
-      <h2 id="settings-title" class="chip">せってい</h2>
+      <h2 id="settings-title" class="chip">Настройки</h2>
       <div class="set-row">
-        <span class="set-label">問題の数</span>
-        <div class="pick" role="radiogroup" aria-label="問題数">
-          <button type="button" role="radio" data-count="6" aria-checked="false">6<small>問</small></button>
-          <button type="button" role="radio" data-count="10" aria-checked="true">10<small>問</small></button>
-          <button type="button" role="radio" data-count="14" aria-checked="false">14<small>問</small></button>
+        <span class="set-label">Сколько примеров</span>
+        <div class="pick" role="radiogroup" aria-label="Сколько примеров">
+          <button type="button" role="radio" data-count="6" aria-checked="false">6</button>
+          <button type="button" role="radio" data-count="10" aria-checked="true">10</button>
+          <button type="button" role="radio" data-count="14" aria-checked="false">14</button>
         </div>
       </div>
       <div class="set-row">
-        <span class="set-label">音</span>
+        <span class="set-label">Звук</span>
         <div class="set-inline">
-          <button type="button" class="toggle" data-toggle="sound" aria-pressed="true"><i aria-hidden="true">♪</i><b>オン</b></button>
-          <input type="range" class="slider" id="volume" min="0" max="100" step="1" value="80" aria-label="音の大きさ">
+          <button type="button" class="toggle" data-toggle="sound" aria-pressed="true"><i aria-hidden="true">♪</i><b>вкл</b></button>
+          <input type="range" class="slider" id="volume" min="0" max="100" step="1" value="80" aria-label="Громкость">
         </div>
       </div>
       <div class="set-row">
-        <span class="set-label">動きの強さ <b id="motion-val">100%</b></span>
-        <input type="range" class="slider motion" id="motion" min="0" max="100" step="1" value="100" aria-label="動きの強さ" aria-describedby="motion-note">
-        <p class="set-note" id="motion-note">0%で揺れ・光・紙吹雪・移動を止めます</p>
+        <span class="set-label">Сила анимации <b id="motion-val">100%</b></span>
+        <input type="range" class="slider motion" id="motion" min="0" max="100" step="1" value="100" aria-label="Сила анимации" aria-describedby="motion-note">
+        <p class="set-note" id="motion-note">При 0% тряска, вспышки, конфетти и движение выключаются</p>
       </div>
       <div class="set-row">
-        <span class="set-label">デモプレイ</span>
-        <button type="button" class="sub-btn demo-btn" id="demo-play">▶ 自動でプレイを見る</button>
-        <p class="set-note">画面をタップするか、キーを押すと終わります（記録には残りません）</p>
+        <span class="set-label">Демо</span>
+        <button type="button" class="sub-btn demo-btn" id="demo-play">▶ Посмотреть, как играет компьютер</button>
+        <p class="set-note">Нажми на экран или любую клавишу, чтобы остановить (в записи не попадает)</p>
       </div>
       <div class="set-row">
-        <span class="set-label">データ</span>
-        <button type="button" class="sub-btn danger reset-btn" id="reset-data" aria-describedby="reset-note">すべて リセット</button>
-        <p class="set-note" id="reset-note">すべての データを けして さいしょに もどします</p>
+        <span class="set-label">Данные</span>
+        <button type="button" class="sub-btn danger reset-btn" id="reset-data" aria-describedby="reset-note">Сбросить всё</button>
+        <p class="set-note" id="reset-note">Удалить все данные и начать с начала</p>
       </div>
-      <button type="button" class="big-btn" id="close-settings">とじる</button>
+      <button type="button" class="big-btn" id="close-settings">Закрыть</button>
     </div>
   </div>
 
   <div class="modal" id="bonus" role="dialog" aria-modal="true" aria-labelledby="bonus-title" hidden>
     <div class="modal-card bonus-card">
-      <h2 id="bonus-title" class="chip">ログインボーナス</h2>
+      <h2 id="bonus-title" class="chip">Подарок за вход</h2>
       <p class="bonus-run" id="bonus-run"></p>
       <div class="bonus-card-grid" id="bonus-grid"></div>
       <p class="bonus-note" id="bonus-note"></p>
-      <button type="button" class="big-btn" id="bonus-ok">もらう</button>
+      <button type="button" class="big-btn" id="bonus-ok">Забрать</button>
     </div>
   </div>
 
@@ -240,51 +241,51 @@
       <div class="si-next" id="si-next"></div>
       <p class="si-note" id="si-note"></p>
       <div class="confirm-actions">
-        <button type="button" class="sub-btn" id="si-close">とじる</button>
-        <button type="button" class="sub-btn si-go" id="si-go">れんしゅう する</button>
+        <button type="button" class="sub-btn" id="si-close">Закрыть</button>
+        <button type="button" class="sub-btn si-go" id="si-go">Тренироваться</button>
       </div>
     </div>
   </div>
 
   <div class="modal" id="trophy-got" role="dialog" aria-modal="true" aria-labelledby="tg-title" hidden>
     <div class="modal-card trophy-card">
-      <h2 id="tg-title" class="chip">トロフィー ゲット！</h2>
+      <h2 id="tg-title" class="chip">Новый трофей!</h2>
       <p class="tg-sub" id="tg-sub"></p>
       <ul class="tg-list" id="tg-list"></ul>
-      <button type="button" class="big-btn" id="tg-ok">やったね！</button>
+      <button type="button" class="big-btn" id="tg-ok">Ура!</button>
     </div>
   </div>
 
   <div class="modal" id="hammer" role="dialog" aria-modal="true" aria-labelledby="hammer-title" aria-describedby="hammer-msg" hidden>
     <div class="modal-card hammer-card">
-      <h2 id="hammer-title" class="chip">ノーカンハンマー</h2>
+      <h2 id="hammer-title" class="chip">Молоток «Не в счёт»</h2>
       <div class="hammer-art" id="hammer-art" aria-hidden="true"></div>
       <p class="hammer-msg" id="hammer-msg"></p>
       <p class="hammer-have" id="hammer-have"></p>
       <div class="confirm-actions">
-        <button type="button" class="sub-btn" id="hammer-no">つかわない</button>
-        <button type="button" class="sub-btn hammer-yes" id="hammer-yes">つかう</button>
+        <button type="button" class="sub-btn" id="hammer-no">Не надо</button>
+        <button type="button" class="sub-btn hammer-yes" id="hammer-yes">Стукнуть</button>
       </div>
     </div>
   </div>
 
   <div class="modal" id="confirm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-msg" hidden>
     <div class="modal-card confirm-card">
-      <h2 id="confirm-title" class="chip">スキルを けす</h2>
+      <h2 id="confirm-title" class="chip">Удалить навык</h2>
       <p class="confirm-msg" id="confirm-msg"></p>
       <ul class="confirm-list" id="confirm-list"></ul>
       <div class="confirm-actions">
-        <button type="button" class="sub-btn" id="confirm-no">やめる</button>
-        <button type="button" class="sub-btn danger" id="confirm-yes">けす</button>
+        <button type="button" class="sub-btn" id="confirm-no">Отмена</button>
+        <button type="button" class="sub-btn danger" id="confirm-yes">Удалить</button>
       </div>
     </div>
   </div>
 
   <div class="modal" id="day-log" role="dialog" aria-modal="true" aria-labelledby="day-title" hidden>
     <div class="modal-card">
-      <h2 id="day-title" class="chip">きろく</h2>
+      <h2 id="day-title" class="chip">Записи</h2>
       <ul class="day-list" id="day-list"></ul>
-      <button type="button" class="big-btn" id="close-day">とじる</button>
+      <button type="button" class="big-btn" id="close-day">Закрыть</button>
     </div>
   </div>
 
@@ -292,6 +293,6 @@
   <svg id="actors" aria-hidden="true"><g id="actors-back"></g><g id="actors-front"></g></svg>
   <div id="cutins" aria-hidden="true"></div>
   <div id="flash" aria-hidden="true"></div>
-  <noscript>このゲームの操作にはJavaScriptが必要です。</noscript>
+  <noscript>Для игры нужен JavaScript.</noscript>
 </body>
 </html>

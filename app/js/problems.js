@@ -15,15 +15,17 @@ export function makeRng(seed) {
   };
 }
 
-const PLACE = ['一の位', '十の位', '百の位', '千の位', '万の位', '十万の位'];
-const DEC_PLACE = ['小数第一位', '小数第二位', '小数第三位'];
+const PLACE = ['единицы', 'десятки', 'сотни', 'тысячи', 'десятки тысяч', 'сотни тысяч'];
+const DEC_PLACE = ['десятые', 'сотые', 'тысячные'];
+// Russian school notation: decimal comma, division colon, remainder "ост.".
+export const COMMA = ',';
 const digits = (n) => String(n).split('').map(Number);
 const gcd = (a, b) => (b ? gcd(b, a % b) : Math.abs(a));
 const lcm = (a, b) => (a / gcd(a, b)) * b;
 // Multiples of d up to the first one above n (hint for "how many d in n").
-const table = (d, n) => { const out = []; for (let k = 1; k <= 9; k++) { out.push(d * k); if (d * k > n) break; } return `${d}のだん ${out.join(' ')}`; };
-// Decimal string for an integer scaled by 10^p (1234, 2 -> "12.34").
-const decStr = (n, p) => { if (!p) return String(n); const s = String(n).padStart(p + 1, '0'); return `${s.slice(0, -p)}.${s.slice(-p)}`; };
+const table = (d, n) => { const out = []; for (let k = 1; k <= 9; k++) { out.push(d * k); if (d * k > n) break; } return `×${d}: ${out.join(' ')}`; };
+// Decimal string for an integer scaled by 10^p (1234, 2 -> "12,34").
+const decStr = (n, p) => { if (!p) return String(n); const s = String(n).padStart(p + 1, '0'); return `${s.slice(0, -p)}${COMMA}${s.slice(-p)}`; };
 
 function carries(a, b) {
   let c = 0; let n = 0;
@@ -51,7 +53,7 @@ function buildAdd(a, b, pa = 0, pb = 0) {
   const shown = (str, p, i) => i < str.length - (P - p);
   as.forEach((d, i) => { if (shown(as, pa, i)) cells.push({ id: `a${cols - as.length + i}`, r: 1, c: cols - as.length + i, text: d, kind: 'given' }); });
   bs.forEach((d, i) => { if (shown(bs, pb, i)) cells.push({ id: `b${cols - bs.length + i}`, r: 2, c: cols - bs.length + i, text: d, kind: 'given' }); });
-  cells.push({ id: 'op', r: 2, c: cols - Math.max(as.length, bs.length) - 1, text: '＋', kind: 'op' });
+  cells.push({ id: 'op', r: 2, c: cols - Math.max(as.length, bs.length) - 1, text: '+', kind: 'op' });
   if (P) addDots(cells, cols - 1 - P, [1, 2, 3]);
   const steps = [];
   let carry = 0;
@@ -62,7 +64,7 @@ function buildAdd(a, b, pa = 0, pb = 0) {
     const carryIn = carry;
     carry = s >= 10 ? 1 : 0;
     const terms = [ad[i], bd[i]].filter((x, k) => x !== undefined && (k === 0 ? shown(as, pa, as.length - 1 - i) : shown(bs, pb, bs.length - 1 - i)));
-    const help = { ids: [`a${c}`, `b${c}`, ...(carryIn ? [`k${c}`] : [])], text: terms.length ? `${terms.join(' ＋ ')}${carryIn ? ' ＋ 1' : ''}` : 'くりあがりの 1' };
+    const help = { ids: [`a${c}`, `b${c}`, ...(carryIn ? [`k${c}`] : [])], text: terms.length ? `${terms.join(' + ')}${carryIn ? ' + 1' : ''}` : '1 в уме' };
     const digit = ss[ss.length - 1 - i];
     cells.push({ id: `s${c}`, r: 3, c, text: digit, kind: 'input' });
     const after = [];
@@ -70,7 +72,7 @@ function buildAdd(a, b, pa = 0, pb = 0) {
     steps.push({ cell: `s${c}`, digit, label: placeLabel(i, P), after, carryFrom: after.length ? c : null, help });
   }
   const text = `${decStr(a, pa)} + ${decStr(b, pb)}`;
-  return { kind: 'add', a, b, answer: decStr(sum, P), text, title: P ? '小数のたしざん' : 'たしざん', rows: 4, cols, cells, lines: [{ r: 2, c0: 0, c1: cols - 1 }], steps, bracket: null };
+  return { kind: 'add', a, b, answer: decStr(sum, P), text, title: P ? 'Сложение десятичных' : 'Сложение', rows: 4, cols, cells, lines: [{ r: 2, c0: 0, c1: cols - 1 }], steps, bracket: null };
 }
 
 function buildSub(a, b, pa = 0, pb = 0) {
@@ -106,14 +108,14 @@ function buildSub(a, b, pa = 0, pb = 0) {
   }
   for (let c = 1; c < cols; c++) cells.push({ id: `m${c}`, r: 0, c, text: '', kind: 'mark', small: true });
   const text = `${decStr(a, pa)} − ${decStr(b, pb)}`;
-  return { kind: 'sub', a, b, answer: decStr(res, P), text, title: P ? '小数のひきざん' : 'ひきざん', rows: 4, cols, cells, lines: [{ r: 2, c0: 0, c1: cols - 1 }], steps, bracket: null };
+  return { kind: 'sub', a, b, answer: decStr(res, P), text, title: P ? 'Вычитание десятичных' : 'Вычитание', rows: 4, cols, cells, lines: [{ r: 2, c0: 0, c1: cols - 1 }], steps, bracket: null };
 }
 
 // Digits of a scaled decimal, with at least one digit before the point.
 function decDigits(n, p) { return String(n).padStart(p + 1, '0').split(''); }
 function placeLabel(i, P) { return i < P ? DEC_PLACE[P - 1 - i] : PLACE[i - P]; }
 // Decimal points sit on the right edge of the ones column in each row.
-function addDots(cells, c, rows, hidden = false) { rows.forEach((r) => cells.push({ id: `dot${r}`, r, c, text: '.', kind: hidden ? 'auto' : 'dot' })); }
+function addDots(cells, c, rows, hidden = false) { rows.forEach((r) => cells.push({ id: `dot${r}`, r, c, text: COMMA, kind: hidden ? 'auto' : 'dot' })); }
 
 // ================================================================ column multiplication
 // a × b with b of 1 or 2 digits; pa/pb decimal places (product point is placed at the end).
@@ -125,8 +127,8 @@ function buildMul(a, b, pa = 0, pb = 0) {
   [...as].forEach((d, i) => cells.push({ id: `a${cols - as.length + i}`, r: 1, c: cols - as.length + i, text: d, kind: 'given' }));
   [...bs].forEach((d, i) => cells.push({ id: `b${cols - bs.length + i}`, r: 2, c: cols - bs.length + i, text: d, kind: 'given' }));
   cells.push({ id: 'op', r: 2, c: cols - Math.max(as.length, bs.length) - 1, text: '×', kind: 'op' });
-  if (pa) cells.push({ id: 'dota', r: 1, c: cols - 1 - pa, text: '.', kind: 'dot' });
-  if (pb) cells.push({ id: 'dotb', r: 2, c: cols - 1 - pb, text: '.', kind: 'dot' });
+  if (pa) cells.push({ id: 'dota', r: 1, c: cols - 1 - pa, text: COMMA, kind: 'dot' });
+  if (pb) cells.push({ id: 'dotb', r: 2, c: cols - 1 - pb, text: COMMA, kind: 'dot' });
   const lines = [{ r: 2, c0: 0, c1: cols - 1 }];
   const steps = [];
   const bd = digits(b).reverse();
@@ -139,9 +141,9 @@ function buildMul(a, b, pa = 0, pb = 0) {
       const digit = part[part.length - 1 - i];
       cells.push({ id: `${tag}${c}`, r: row, c, text: digit, kind: 'input' });
       const x = ad[i];
-      const help = x !== undefined ? { ids: [`a${c + shift}`, `b${cols - 1 - shift}`], text: `${x} × ${factor}${carry ? ` ＋ ${carry}` : ''}` } : { ids: [], text: `くりあがりの ${carry}` };
+      const help = x !== undefined ? { ids: [`a${c + shift}`, `b${cols - 1 - shift}`], text: `${x} × ${factor}${carry ? ` + ${carry}` : ''}` } : { ids: [], text: `${carry} в уме` };
       carry = x !== undefined ? Math.floor((x * factor + carry) / 10) : 0;
-      steps.push({ cell: `${tag}${c}`, digit, label: `${factor}をかける`, after: [], help });
+      steps.push({ cell: `${tag}${c}`, digit, label: `умножаем на ${factor}`, after: [], help });
     }
   };
   if (bs.length === 1) {
@@ -157,34 +159,41 @@ function buildMul(a, b, pa = 0, pb = 0) {
       const x = Math.floor(p1 / 10 ** i) % 10; const y = i ? Math.floor(p2 / 10 ** i) % 10 : 0;
       const digit = ps[ps.length - 1 - i];
       cells.push({ id: `s${c}`, r: 5, c, text: digit, kind: 'input' });
-      const help = { ids: [`p${c}`, `q${c}`], text: `${x}${i ? ` ＋ ${y}` : ''}${carry ? ` ＋ ${carry}` : ''}` };
+      const help = { ids: [`p${c}`, `q${c}`], text: `${x}${i ? ` + ${y}` : ''}${carry ? ` + ${carry}` : ''}` };
       carry = Math.floor((x + y + carry) / 10);
-      steps.push({ cell: `s${c}`, digit, label: `たす（${PLACE[i]}）`, after: [], help });
+      steps.push({ cell: `s${c}`, digit, label: `складываем: ${PLACE[i]}`, after: [], help });
     }
   }
   const P = pa + pb;
   const lastRow = bs.length === 1 ? 3 : 5;
-  if (P) { cells.push({ id: 'dotp', r: lastRow, c: cols - 1 - P, text: '.', kind: 'auto' }); steps[steps.length - 1].after.push('dotp'); }
+  if (P) { cells.push({ id: 'dotp', r: lastRow, c: cols - 1 - P, text: COMMA, kind: 'auto' }); steps[steps.length - 1].after.push('dotp'); }
   const text = `${decStr(a, pa)} × ${decStr(b, pb)}`;
-  return { kind: 'mul', a, b, answer: decStr(prod, P), text, title: P ? '小数のかけざん' : 'かけざん', rows: lastRow + 1, cols, cells, lines, steps, bracket: null };
+  return { kind: 'mul', a, b, answer: decStr(prod, P), text, title: P ? 'Умножение десятичных' : 'Умножение', rows: lastRow + 1, cols, cells, lines, steps, bracket: null };
 }
 
 // ================================================================ long division
-// D ÷ d (d of 1-2 digits), integer quotient, remainder allowed.
+// D : d (d of 1-2 digits), integer quotient, remainder allowed. Russian
+// "уголок" layout: the dividend on the left (column 0 keeps the minus signs),
+// the divisor to its right behind a corner, the quotient under the divisor;
+// partial products and remainders go down under the dividend.
 function buildDiv(D, d) {
   const Ds = String(D); const ds = String(d);
-  const off = ds.length; // dividend columns start after the divisor
-  const cols = off + Ds.length;
-  const cells = [];
-  [...ds].forEach((x, i) => cells.push({ id: `dv${i}`, r: 1, c: i, text: x, kind: 'given' }));
-  [...Ds].forEach((x, i) => cells.push({ id: `D${i + 1}`, r: 1, c: off + i, text: x, kind: 'given' }));
   const q = Math.floor(D / d); const rem = D % d;
+  const off = 1; // dividend columns start after the minus column
+  const lastCol = off + Ds.length - 1;
+  const right = lastCol + 1; // divisor and quotient start here
   // First partial dividend: fewest leading digits that are >= d.
   let k = 1;
   while (Number(Ds.slice(0, k)) < d && k < Ds.length) k += 1;
+  const qLen = Ds.length - k + 1;
+  const cols = right + Math.max(ds.length, qLen);
+  const cells = [];
+  [...Ds].forEach((x, i) => cells.push({ id: `D${i + 1}`, r: 0, c: off + i, text: x, kind: 'given' }));
+  [...ds].forEach((x, i) => cells.push({ id: `dv${i}`, r: 0, c: right + i, text: x, kind: 'given' }));
   let cur = Number(Ds.slice(0, k));
   let col = off + k - 1;
-  let rowP = 1; // row holding the current partial dividend
+  let qi = 0;
+  let rowP = 0; // row holding the current partial dividend
   const steps = [];
   const lines = [];
   const place = (n, endCol, r, prefix, kind) => digits(n).map((x, i, arr) => {
@@ -196,19 +205,22 @@ function buildDiv(D, d) {
   const divIds = [...ds].map((_, i) => `dv${i}`);
   for (;;) {
     const qd = Math.floor(cur / d);
-    const qid = `q${col}`;
-    cells.push({ id: qid, r: 0, c: col, text: String(qd), kind: 'input' });
-    const last = col === cols - 1;
-    const qStep = { cell: qid, digit: String(qd), label: `商の${PLACE[cols - 1 - col]}`, hint: `${cur}の中に${d}はいくつ`, after: [], help: { ids: divIds, text: table(d, cur) } };
+    const qid = `q${qi}`;
+    cells.push({ id: qid, r: 1, c: right + qi, text: String(qd), kind: 'input' });
+    qi += 1;
+    const last = col === lastCol;
+    const qStep = { cell: qid, digit: String(qd), label: `частное: ${PLACE[lastCol - col]}`, hint: `сколько раз ${d} в ${cur}?`, after: [], help: { ids: divIds, text: table(d, cur) } };
     steps.push(qStep);
     let r = cur;
     if (qd > 0) {
       const m = qd * d;
       const pr = rowP + 1;
       const mids = place(m, col, pr, 'm', 'auto');
+      const mid = `mi${pr}`;
+      cells.push({ id: mid, r: pr, c: col - String(m).length, text: '−', kind: 'auto', minus: true });
       const lid = `L${pr}`;
       lines.push({ id: lid, r: pr, c0: col - String(Math.max(m, cur)).length + 1, c1: col, hidden: true });
-      qStep.after.push(...mids, lid);
+      qStep.after.push(mid, ...mids, lid);
       r = cur - m;
       rowP = pr + 1;
       // Remainder of this subtraction, typed right to left (omitted when 0 and more digits follow).
@@ -223,7 +235,7 @@ function buildDiv(D, d) {
           const c = col - (rs.length - 1 - i);
           const id = `r${rowP}_${c}`;
           cells.push({ id, r: rowP, c, text: rs[i], kind: 'input' });
-          steps.push({ cell: id, digit: rs[i], label: 'ひいた のこり', hint: `${cur} − ${m}`, after: [], help: { ids: mids, text: `${cur} − ${m}` } });
+          steps.push({ cell: id, digit: rs[i], label: 'остаток', hint: `${cur} − ${m}`, after: [], help: { ids: mids, text: `${cur} − ${m}` } });
         }
       }
     }
@@ -236,18 +248,17 @@ function buildDiv(D, d) {
     cur = r * 10 + Number(nextDigit);
     col += 1;
   }
-  const row = rowP;
-  const rows = row + 1;
-  const answer = rem ? `${q} あまり ${rem}` : String(q);
+  const rows = Math.max(rowP + 1, 2);
+  const answer = rem ? `${q} (ост. ${rem})` : String(q);
   return {
-    kind: 'div', a: D, b: d, answer, text: `${D} ÷ ${d}`, title: 'わりざん', rows, cols, cells, lines, steps,
-    bracket: { r: 1, c0: off, c1: cols - 1 }, rem,
+    kind: 'div', a: D, b: d, answer, text: `${D} : ${d}`, title: 'Деление уголком', rows, cols, cells, lines, steps,
+    bracket: { r: 0, c0: right, c1: cols - 1, corner: true }, rem,
   };
 }
 
 // ================================================================ horizontal expressions
-// tokens: { n: '12' } given number, { op: '＋' }, { w: 'あまり' } word,
-// { ans: '12.5' } answer (digits typed left to right, point auto),
+// tokens: { n: '12' } given number, { op: '+' }, { w: 'ост.' } word,
+// { ans: '12,5' } answer (digits typed left to right, comma auto),
 // { f: [n, d, whole?] } given fraction, { fa: [n, d, whole?] } answer fraction,
 // { br: true } line break.
 function buildH(tokens, meta) {
@@ -264,7 +275,7 @@ function buildH(tokens, meta) {
     if (t.n !== undefined || t.op !== undefined || t.w !== undefined) {
       const text = String(t.n ?? t.op ?? t.w);
       const kind = t.n !== undefined ? 'given' : t.op !== undefined ? 'op' : 'word';
-      const w = kind === 'word' ? Math.max(1, Math.ceil(text.length / 2)) : kind === 'given' ? text.replace('.', '').length : 1;
+      const w = kind === 'word' ? Math.max(1, Math.ceil(text.length / 2.5)) : kind === 'given' ? text.replace(COMMA, '').length : 1;
       const cid = id(kind[0]);
       cells.push({ id: cid, r, c, cs: w, ...span, text, kind });
       if (kind === 'given') ansIds.push(cid);
@@ -272,10 +283,10 @@ function buildH(tokens, meta) {
     } else if (t.ans !== undefined) {
       const s = String(t.ans);
       for (const ch of s) {
-        if (ch === '.') { cells.push({ id: id('dot'), r, c: c - 1, ...span, text: '.', kind: 'dot' }); continue; }
+        if (ch === COMMA) { cells.push({ id: id('dot'), r, c: c - 1, ...span, text: COMMA, kind: 'dot' }); continue; }
         const cid = id('x');
         cells.push({ id: cid, r, c, ...span, text: ch, kind: 'input' });
-        steps.push({ cell: cid, digit: ch, label: t.label || 'こたえ', after: [], help: meta.help ? { ids: [...ansIds], text: meta.help } : null });
+        steps.push({ cell: cid, digit: ch, label: t.label || 'ответ', after: [], help: meta.help ? { ids: [...ansIds], text: meta.help } : null });
         c += 1;
       }
     } else if (t.f || t.fa) {
@@ -284,7 +295,7 @@ function buildH(tokens, meta) {
       if (whole) {
         const ws = String(whole);
         if (given) { cells.push({ id: id('w'), r, c, cs: ws.length, ...span, text: ws, kind: 'given' }); c += ws.length; } else {
-          for (const ch of ws) { const cid = id('x'); cells.push({ id: cid, r, c, ...span, text: ch, kind: 'input' }); steps.push({ cell: cid, digit: ch, label: '整数の部分', after: [], help: meta.help ? { ids: [], text: meta.help } : null }); c += 1; }
+          for (const ch of ws) { const cid = id('x'); cells.push({ id: cid, r, c, ...span, text: ch, kind: 'input' }); steps.push({ cell: cid, digit: ch, label: 'целая часть', after: [], help: meta.help ? { ids: [], text: meta.help } : null }); c += 1; }
         }
       }
       const ns = String(n); const dsx = String(d);
@@ -300,8 +311,8 @@ function buildH(tokens, meta) {
           cells.push({ id: cid, r: row, c: c + w - str.length + i, text: ch, kind: 'input', cls });
           steps.push({ cell: cid, digit: ch, label, after: [], help: meta.help ? { ids: [], text: meta.help } : null });
         });
-        put(dsx, r + 1, '分母', 'frac-d');
-        put(ns, r, '分子', 'frac-n');
+        put(dsx, r + 1, 'знаменатель', 'frac-d');
+        put(ns, r, 'числитель', 'frac-n');
       }
       c += w;
     }
@@ -319,7 +330,7 @@ const reduce = (n, d) => { const g = gcd(n, d); return [n / g, d / g]; };
 // Fraction answer token, as a mixed number when requested.
 function fracAns(n, d, mixed) {
   [n, d] = reduce(n, d);
-  if (mixed && n > d) return { fa: [n % d, d, Math.floor(n / d)], text: `${Math.floor(n / d)}と${n % d}/${d}` };
+  if (mixed && n > d) return { fa: [n % d, d, Math.floor(n / d)], text: `${Math.floor(n / d)} ${n % d}/${d}` };
   return { fa: [n, d], text: `${n}/${d}` };
 }
 const fracTok = (n, d, whole) => ({ f: [n, d, whole] });
@@ -327,7 +338,7 @@ const fracTok = (n, d, whole) => ({ f: [n, d, whole] });
 const GEN = {
   compose(rng, { total }) {
     const a = R(rng)(1, total - 1);
-    return buildH([{ n: total }, { w: 'は' }, { n: a }, { w: 'と' }, { ans: total - a }], { title: 'いくつといくつ', text: `${total}は${a}と`, answer: String(total - a), help: `${a}に いくつで ${total}` });
+    return buildH([{ n: total }, { op: '=' }, { n: a }, { op: '+' }, { ans: total - a }], { title: 'Состав числа', text: `${total} = ${a} + ?`, answer: String(total - a), help: `${a} + ? = ${total}` });
   },
   hadd(rng, { a, b, carry, tensToo }) {
     const r = R(rng);
@@ -338,8 +349,8 @@ const GEN = {
       if (carry === 'none' && c) continue;
       if (carry === 'yes' && !c) continue;
       if (rng() < 0.5 && !tensToo) [x, y] = [y, x];
-      const help = carry === 'yes' ? `${x}に ${10 - (x % 10)}で 10` : null;
-      return buildH([{ n: x }, { op: '＋' }, { n: y }, { op: '＝' }, { ans: x + y }], { title: 'たしざん', text: `${x} + ${y}`, answer: String(x + y), help: help || `${x} ＋ ${y}` });
+      const help = carry === 'yes' ? `${x} + ${10 - (x % 10)} = 10, и ещё ${y - (10 - (x % 10))}` : null;
+      return buildH([{ n: x }, { op: '+' }, { n: y }, { op: '=' }, { ans: x + y }], { title: 'Сложение', text: `${x} + ${y}`, answer: String(x + y), help: help || `${x} + ${y}` });
     }
     throw new Error('hadd');
   },
@@ -352,8 +363,8 @@ const GEN = {
       const br = borrows(x, y);
       if (borrow === 'none' && br) continue;
       if (borrow === 'yes' && !br) continue;
-      const help = borrow === 'yes' ? `10 − ${y} ＝ ${10 - y}` : `${x} − ${y}`;
-      return buildH([{ n: x }, { op: '−' }, { n: y }, { op: '＝' }, { ans: x - y }], { title: 'ひきざん', text: `${x} − ${y}`, answer: String(x - y), help });
+      const help = borrow === 'yes' ? `${x} − ${x - 10} = 10, и ещё − ${y - (x - 10)}` : `${x} − ${y}`;
+      return buildH([{ n: x }, { op: '−' }, { n: y }, { op: '=' }, { ans: x - y }], { title: 'Вычитание', text: `${x} − ${y}`, answer: String(x - y), help });
     }
     throw new Error('hsub');
   },
@@ -361,41 +372,41 @@ const GEN = {
     const r = R(rng);
     for (let g = 0; g < 400; g++) {
       const a = r(1, 9); const b = r(1, 9); const c = r(1, 9);
-      const o1 = rng() < 0.6 ? '＋' : '−'; const o2 = rng() < 0.6 ? '＋' : '−';
-      const s1 = o1 === '＋' ? a + b : a - b; if (s1 < 0) continue;
-      const s2 = o2 === '＋' ? s1 + c : s1 - c; if (s2 < 0 || s2 > 20) continue;
-      return buildH([{ n: a }, { op: o1 }, { n: b }, { op: o2 }, { n: c }, { op: '＝' }, { ans: s2 }], { title: '3つのかず', text: `${a}${o1}${b}${o2}${c}`, answer: String(s2), help: `まず ${a} ${o1} ${b} ＝ ${s1}` });
+      const o1 = rng() < 0.6 ? '+' : '−'; const o2 = rng() < 0.6 ? '+' : '−';
+      const s1 = o1 === '+' ? a + b : a - b; if (s1 < 0) continue;
+      const s2 = o2 === '+' ? s1 + c : s1 - c; if (s2 < 0 || s2 > 20) continue;
+      return buildH([{ n: a }, { op: o1 }, { n: b }, { op: o2 }, { n: c }, { op: '=' }, { ans: s2 }], { title: 'Три числа', text: `${a}${o1}${b}${o2}${c}`, answer: String(s2), help: `сначала ${a} ${o1} ${b} = ${s1}` });
     }
     throw new Error('add3');
   },
   kuku(rng, { dans }) {
     const a = pickOf(rng, dans); const b = R(rng)(1, 9);
-    return buildH([{ n: a }, { op: '×' }, { n: b }, { op: '＝' }, { ans: a * b }], { title: 'かけざん', text: `${a} × ${b}`, answer: String(a * b), help: table(a, a * (b - 1)) });
+    return buildH([{ n: a }, { op: '×' }, { n: b }, { op: '=' }, { ans: a * b }], { title: 'Таблица умножения', text: `${a} × ${b}`, answer: String(a * b), help: table(a, a * (b - 1)) });
   },
   mulTens(rng) {
     const a = R(rng)(1, 9) * 10; const b = R(rng)(2, 9);
-    return buildH([{ n: a }, { op: '×' }, { n: b }, { op: '＝' }, { ans: a * b }], { title: 'かけざん', text: `${a} × ${b}`, answer: String(a * b), help: `${a / 10} × ${b} の 10こぶん` });
+    return buildH([{ n: a }, { op: '×' }, { n: b }, { op: '=' }, { ans: a * b }], { title: 'Умножение', text: `${a} × ${b}`, answer: String(a * b), help: `${a / 10} дес. × ${b} = ${(a / 10) * b} дес.` });
   },
   fracOf(rng, { dens }) {
     const d = pickOf(rng, dens); const q = R(rng)(1, 9);
-    return buildH([{ n: q * d }, { w: 'の' }, fracTok(1, d), { w: 'は' }, { ans: q }], { title: 'ぶんすう', text: `${q * d}の1/${d}`, answer: String(q), help: `${q * d}を ${d}つに わける` });
+    return buildH([fracTok(1, d), { w: 'от' }, { n: q * d }, { op: '=' }, { ans: q }], { title: 'Доля числа', text: `1/${d} от ${q * d}`, answer: String(q), help: `${q * d} : ${d}` });
   },
   div(rng) {
     const d = R(rng)(2, 9); const q = R(rng)(1, 9);
-    return buildH([{ n: q * d }, { op: '÷' }, { n: d }, { op: '＝' }, { ans: q }], { title: 'わりざん', text: `${q * d} ÷ ${d}`, answer: String(q), help: table(d, q * d) });
+    return buildH([{ n: q * d }, { op: ':' }, { n: d }, { op: '=' }, { ans: q }], { title: 'Деление', text: `${q * d} : ${d}`, answer: String(q), help: table(d, q * d) });
   },
   divRem(rng) {
     const d = R(rng)(2, 9); const q = R(rng)(1, 9); const rem = R(rng)(1, d - 1);
     const D = q * d + rem;
-    return buildH([{ n: D }, { op: '÷' }, { n: d }, { op: '＝' }, { ans: q, label: '商' }, { w: 'あまり' }, { ans: rem, label: 'あまり' }], { title: 'あまりのあるわりざん', text: `${D} ÷ ${d}`, answer: `${q} あまり ${rem}`, help: table(d, D) });
+    return buildH([{ n: D }, { op: ':' }, { n: d }, { op: '=' }, { ans: q, label: 'частное' }, { w: '(ост.' }, { ans: rem, label: 'остаток' }, { op: ')' }], { title: 'Деление с остатком', text: `${D} : ${d}`, answer: `${q} (ост. ${rem})`, help: table(d, D) });
   },
   divTens(rng) {
     const r = R(rng);
     for (let g = 0; g < 200; g++) {
       const d = r(2, 9);
-      if (rng() < 0.5) { const q = r(1, 9); if (q * d * 10 > 99) continue; return buildH([{ n: q * d * 10 }, { op: '÷' }, { n: d }, { op: '＝' }, { ans: q * 10 }], { title: 'わりざん', text: `${q * d * 10} ÷ ${d}`, answer: String(q * 10), help: `${q * d} ÷ ${d} の 10こぶん` }); }
+      if (rng() < 0.5) { const q = r(1, 9); if (q * d * 10 > 99) continue; return buildH([{ n: q * d * 10 }, { op: ':' }, { n: d }, { op: '=' }, { ans: q * 10 }], { title: 'Деление', text: `${q * d * 10} : ${d}`, answer: String(q * 10), help: `${q * d} дес. : ${d} = ${q} дес.` }); }
       const t = r(1, 4); const o = r(1, 4); const D = (t * 10 + o) * d; if (D > 99 || Math.floor(D / 10) % d || (D % 10) % d) continue;
-      return buildH([{ n: D }, { op: '÷' }, { n: d }, { op: '＝' }, { ans: D / d }], { title: 'わりざん', text: `${D} ÷ ${d}`, answer: String(D / d), help: `${Math.floor(D / 10) * 10} ÷ ${d} と ${D % 10} ÷ ${d}` });
+      return buildH([{ n: D }, { op: ':' }, { n: d }, { op: '=' }, { ans: D / d }], { title: 'Деление', text: `${D} : ${d}`, answer: String(D / d), help: `${Math.floor(D / 10) * 10} : ${d} и ${D % 10} : ${d}` });
     }
     throw new Error('divTens');
   },
@@ -471,16 +482,16 @@ const GEN = {
     for (let g = 0; g < 200; g++) {
       const d = r(2, 9); const q = r(11, 99); if (q % 10 === 0) continue;
       const D = q * d; if (D % 10 === 0 || D > 999) continue;
-      return buildH([{ n: decStr(D, 1) }, { op: '÷' }, { n: d }, { op: '＝' }, { ans: decStr(q, 1) }], { title: '小数のわりざん', text: `${decStr(D, 1)} ÷ ${d}`, answer: decStr(q, 1), help: `${D} ÷ ${d} を 考える` });
+      return buildH([{ n: decStr(D, 1) }, { op: ':' }, { n: d }, { op: '=' }, { ans: decStr(q, 1) }], { title: 'Деление десятичных', text: `${decStr(D, 1)} : ${d}`, answer: decStr(q, 1), help: `${D} : ${d}, потом поставь запятую` });
     }
     throw new Error('decDivInt');
   },
   decDivDec(rng) {
     const r = R(rng);
     const d = r(2, 9); const q = r(2, 9);
-    if (rng() < 0.5) { const D = d * q; return buildH([{ n: decStr(D, 1) }, { op: '÷' }, { n: decStr(d, 1) }, { op: '＝' }, { ans: q }], { title: '小数のわりざん', text: `${decStr(D, 1)} ÷ ${decStr(d, 1)}`, answer: String(q), help: `${D} ÷ ${d} と 同じ` }); }
+    if (rng() < 0.5) { const D = d * q; return buildH([{ n: decStr(D, 1) }, { op: ':' }, { n: decStr(d, 1) }, { op: '=' }, { ans: q }], { title: 'Деление десятичных', text: `${decStr(D, 1)} : ${decStr(d, 1)}`, answer: String(q), help: `то же, что ${D} : ${d}` }); }
     const d2 = r(11, 29); const D2 = d2 * q;
-    return buildH([{ n: decStr(D2, 1) }, { op: '÷' }, { n: decStr(d2, 1) }, { op: '＝' }, { ans: q }], { title: '小数のわりざん', text: `${decStr(D2, 1)} ÷ ${decStr(d2, 1)}`, answer: String(q), help: `${D2} ÷ ${d2} と 同じ` });
+    return buildH([{ n: decStr(D2, 1) }, { op: ':' }, { n: decStr(d2, 1) }, { op: '=' }, { ans: q }], { title: 'Деление десятичных', text: `${decStr(D2, 1)} : ${decStr(d2, 1)}`, answer: String(q), help: `то же, что ${D2} : ${d2}` });
   },
   gcdlcm(rng, { kind }) {
     const r = R(rng);
@@ -489,8 +500,8 @@ const GEN = {
       if (a === b || a < 4 || b < 4) continue;
       const ans = kind === 'gcd' ? gcd(a, b) : lcm(a, b);
       if (ans === 1 || ans > 99) continue;
-      const w = kind === 'gcd' ? '最大公約数' : '最小公倍数';
-      return buildH([{ n: a }, { w: 'と' }, { n: b }, { w: 'の' }, { br: true }, { w }, { op: '＝' }, { ans }], { title: w, text: `${a}と${b}の${w}`, answer: String(ans), help: kind === 'gcd' ? `どちらも わりきれる 数` : `${Math.max(a, b)}のばいすう` });
+      const w = kind === 'gcd' ? 'НОД' : 'НОК';
+      return buildH([{ w }, { op: '(' }, { n: a }, { op: ';' }, { n: b }, { op: ')' }, { op: '=' }, { ans }], { title: kind === 'gcd' ? 'Наибольший общий делитель' : 'Наименьшее общее кратное', text: `${w}(${a}; ${b})`, answer: String(ans), help: kind === 'gcd' ? 'на какое число делятся оба?' : `кратные ${Math.max(a, b)}` });
     }
     throw new Error('gcdlcm');
   },
@@ -500,12 +511,12 @@ const GEN = {
       const a = r(2, 9); const b = r(2, 9); const c = r(2, 9);
       const form = r(0, 3);
       let toks; let ans; let help;
-      if (form === 0) { ans = a + b * c; toks = [{ n: a }, { op: '＋' }, { n: b }, { op: '×' }, { n: c }]; help = `先に ${b} × ${c}`; }
-      else if (form === 1) { ans = a * (b + c); toks = [{ n: a }, { op: '×' }, { op: '(' }, { n: b }, { op: '＋' }, { n: c }, { op: ')' }]; help = `先に ${b} ＋ ${c}`; }
-      else if (form === 2) { if (a <= b) continue; ans = (a - b) * c; toks = [{ op: '(' }, { n: a }, { op: '−' }, { n: b }, { op: ')' }, { op: '×' }, { n: c }]; help = `先に ${a} − ${b}`; }
-      else { const bc = b * c; const x = r(bc + 1, bc + 30); ans = x - bc; toks = [{ n: x }, { op: '−' }, { n: b }, { op: '×' }, { n: c }]; help = `先に ${b} × ${c}`; }
+      if (form === 0) { ans = a + b * c; toks = [{ n: a }, { op: '+' }, { n: b }, { op: '×' }, { n: c }]; help = `сначала ${b} × ${c}`; }
+      else if (form === 1) { ans = a * (b + c); toks = [{ n: a }, { op: '×' }, { op: '(' }, { n: b }, { op: '+' }, { n: c }, { op: ')' }]; help = `сначала ${b} + ${c}`; }
+      else if (form === 2) { if (a <= b) continue; ans = (a - b) * c; toks = [{ op: '(' }, { n: a }, { op: '−' }, { n: b }, { op: ')' }, { op: '×' }, { n: c }]; help = `сначала ${a} − ${b}`; }
+      else { const bc = b * c; const x = r(bc + 1, bc + 30); ans = x - bc; toks = [{ n: x }, { op: '−' }, { n: b }, { op: '×' }, { n: c }]; help = `сначала ${b} × ${c}`; }
       if (ans <= 0 || ans > 999) continue;
-      return buildH([...toks, { op: '＝' }, { ans }], { title: 'けいさんのきまり', text: toks.map((t) => t.n ?? t.op).join(''), answer: String(ans), help });
+      return buildH([...toks, { op: '=' }, { ans }], { title: 'Порядок действий', text: toks.map((t) => t.n ?? t.op).join(''), answer: String(ans), help });
     }
     throw new Error('order');
   },
@@ -515,15 +526,15 @@ const GEN = {
     const pl = r(1, Math.min(3, len - 2));
     const unit = 10 ** pl; const ans = Math.round(n / unit) * unit;
     if (String(ans).length > len) return GEN.round(rng);
-    const nm = ['十', '百', '千'][pl - 1];
-    return buildH([{ n }, { w: 'を' }, { br: true }, { w: `${nm}の位まで` }, { op: '→' }, { ans }], { title: 'がい数', text: `${n}を${nm}の位までのがい数に`, answer: String(ans), help: `${['一', '十', '百'][pl - 1]}の位を 四捨五入` });
+    const nm = ['десятков', 'сотен', 'тысяч'][pl - 1];
+    return buildH([{ n }, { op: '≈' }, { ans, label: `округли до ${nm}` }], { title: `Округли до ${nm}`, text: `${n} до ${nm}`, answer: String(ans), help: `смотри на цифру разряда ${['единиц', 'десятков', 'сотен'][pl - 1]}: 5 и больше — вверх` });
   },
   percent(rng) {
     const r = R(rng);
     for (let g = 0; g < 200; g++) {
       const base = pickOf(rng, [20, 40, 50, 60, 80, 100, 200, 300, 400, 500]); const p = pickOf(rng, [5, 10, 20, 25, 30, 40, 50, 60, 75]);
       const ans = (base * p) / 100; if (!Number.isInteger(ans) || ans === 0) continue;
-      return buildH([{ n: base }, { w: 'の' }, { n: p }, { op: '%' }, { op: '＝' }, { ans }], { title: '百分率', text: `${base}の${p}%`, answer: String(ans), help: `${base} × ${p / 100}` });
+      return buildH([{ n: p }, { op: '%' }, { w: 'от' }, { n: base }, { op: '=' }, { ans }], { title: 'Проценты', text: `${p}% от ${base}`, answer: String(ans), help: `${base} : 100 × ${p}` });
     }
     throw new Error('percent');
   },
@@ -532,25 +543,25 @@ const GEN = {
     const a = r(1, 9); const b = r(1, 9); if (a === b) return GEN.ratio(rng);
     const [x, y] = reduce(a, b); const k = r(2, 9);
     const hideLeft = rng() < 0.5;
-    const toks = hideLeft ? [{ n: x }, { op: '：' }, { n: y }, { op: '＝' }, { ans: x * k }, { op: '：' }, { n: y * k }] : [{ n: x }, { op: '：' }, { n: y }, { op: '＝' }, { n: x * k }, { op: '：' }, { ans: y * k }];
-    return buildH(toks, { title: 'ひ', text: `${x}:${y}`, answer: String(hideLeft ? x * k : y * k), help: `${k}ばい` });
+    const toks = hideLeft ? [{ n: x }, { op: ':' }, { n: y }, { op: '=' }, { ans: x * k }, { op: ':' }, { n: y * k }] : [{ n: x }, { op: ':' }, { n: y }, { op: '=' }, { n: x * k }, { op: ':' }, { ans: y * k }];
+    return buildH(toks, { title: 'Пропорция', text: `${x}:${y}`, answer: String(hideLeft ? x * k : y * k), help: `всё в ${k} раз больше` });
   },
   letter(rng) {
     const r = R(rng);
     const x = r(2, 12); const a = r(2, 9);
     const form = r(0, 2);
     let toks; let help;
-    if (form === 0) { toks = [{ n: 'x' }, { op: '×' }, { n: a }, { op: '＝' }, { n: x * a }]; help = `${x * a} ÷ ${a}`; }
-    else if (form === 1) { toks = [{ n: 'x' }, { op: '＋' }, { n: a * 3 }, { op: '＝' }, { n: x + a * 3 }]; help = `${x + a * 3} − ${a * 3}`; }
-    else { toks = [{ n: 'x' }, { op: '−' }, { n: a }, { op: '＝' }, { n: x }]; help = `${x} ＋ ${a}`; return buildH([...toks, { br: true }, { n: 'x' }, { op: '＝' }, { ans: x + a }], { title: 'xをもとめる', text: toks.map((t) => t.n ?? t.op ?? t.w).join(''), answer: String(x + a), help }); }
-    return buildH([...toks, { br: true }, { n: 'x' }, { op: '＝' }, { ans: x }], { title: 'xをもとめる', text: toks.map((t) => t.n ?? t.op ?? t.w).join(''), answer: String(x), help });
+    if (form === 0) { toks = [{ n: 'x' }, { op: '×' }, { n: a }, { op: '=' }, { n: x * a }]; help = `x = ${x * a} : ${a}`; }
+    else if (form === 1) { toks = [{ n: 'x' }, { op: '+' }, { n: a * 3 }, { op: '=' }, { n: x + a * 3 }]; help = `x = ${x + a * 3} − ${a * 3}`; }
+    else { toks = [{ n: 'x' }, { op: '−' }, { n: a }, { op: '=' }, { n: x }]; help = `x = ${x} + ${a}`; return buildH([...toks, { br: true }, { n: 'x' }, { op: '=' }, { ans: x + a }], { title: 'Уравнение', text: toks.map((t) => t.n ?? t.op ?? t.w).join(''), answer: String(x + a), help }); }
+    return buildH([...toks, { br: true }, { n: 'x' }, { op: '=' }, { ans: x }], { title: 'Уравнение', text: toks.map((t) => t.n ?? t.op ?? t.w).join(''), answer: String(x), help });
   },
   frac(rng, { op, same, maxOne, mixed }) {
     const r = R(rng);
     for (let g = 0; g < 600; g++) {
       if (op === 'reduce') {
         const d = r(2, 9); const n = r(1, d - 1); const k = r(2, 6); if (gcd(n, d) !== 1) continue;
-        return buildH([fracTok(n * k, d * k), { op: '＝' }, { fa: [n, d] }], { title: '約分', text: `${n * k}/${d * k}`, answer: `${n}/${d}`, help: `${k}で わる` });
+        return buildH([fracTok(n * k, d * k), { op: '=' }, { fa: [n, d] }], { title: 'Сокращение дробей', text: `${n * k}/${d * k}`, answer: `${n}/${d}`, help: `раздели числитель и знаменатель на ${k}` });
       }
       if (op === 'addsub' && same) {
         const d = r(3, 12); const add = rng() < 0.55;
@@ -561,12 +572,12 @@ const GEN = {
           if (gcd(res % d, d) !== 1 && res % d) continue;
           const t1 = fracTok(n1, d, w1); const t2 = fracTok(n2, d, w2 || undefined);
           const fa = { fa: [res % d, d, Math.floor(res / d) || undefined] };
-          return buildH([t1, { op: add ? '＋' : '−' }, t2, { op: '＝' }, fa], { title: '分数のたしひき', text: `${w1}と${n1}/${d} ${add ? '+' : '−'} ${w2}と${n2}/${d}`, answer: res >= d ? `${Math.floor(res / d)}と${res % d}/${d}` : `${res}/${d}`, help: `分母は ${d} のまま` });
+          return buildH([t1, { op: add ? '+' : '−' }, t2, { op: '=' }, fa], { title: 'Смешанные числа', text: `${w1} ${n1}/${d} ${add ? '+' : '−'} ${w2} ${n2}/${d}`, answer: res >= d ? `${Math.floor(res / d)} ${res % d}/${d}` : `${res}/${d}`, help: `знаменатель ${d} не меняется` });
         }
         const n1 = r(1, d - 1); const n2 = r(1, d - 1);
         const res = add ? n1 + n2 : n1 - n2;
         if (res <= 0 || (maxOne && res >= d)) continue;
-        return buildH([fracTok(n1, d), { op: add ? '＋' : '−' }, fracTok(n2, d), { op: '＝' }, { fa: [res, d] }], { title: '分数のたしひき', text: `${n1}/${d} ${add ? '+' : '−'} ${n2}/${d}`, answer: `${res}/${d}`, help: `分母は ${d} のまま` });
+        return buildH([fracTok(n1, d), { op: add ? '+' : '−' }, fracTok(n2, d), { op: '=' }, { fa: [res, d] }], { title: 'Сложение и вычитание дробей', text: `${n1}/${d} ${add ? '+' : '−'} ${n2}/${d}`, answer: `${res}/${d}`, help: `знаменатель ${d} не меняется` });
       }
       if (op === 'addsub') {
         const d1 = r(2, 9); const d2 = r(2, 9); if (d1 === d2) continue;
@@ -575,7 +586,7 @@ const GEN = {
         const res = add ? n1 * (L / d1) + n2 * (L / d2) : n1 * (L / d1) - n2 * (L / d2);
         if (res <= 0 || res >= L) continue;
         const [rn, rd] = reduce(res, L);
-        return buildH([fracTok(n1, d1), { op: add ? '＋' : '−' }, fracTok(n2, d2), { op: '＝' }, { fa: [rn, rd] }], { title: '分数のたしひき', text: `${n1}/${d1} ${add ? '+' : '−'} ${n2}/${d2}`, answer: `${rn}/${rd}`, help: `通分すると 分母は ${L}` });
+        return buildH([fracTok(n1, d1), { op: add ? '+' : '−' }, fracTok(n2, d2), { op: '=' }, { fa: [rn, rd] }], { title: 'Сложение и вычитание дробей', text: `${n1}/${d1} ${add ? '+' : '−'} ${n2}/${d2}`, answer: `${rn}/${rd}`, help: `общий знаменатель ${L}, потом сократи` });
       }
       if (op === 'muldivInt') {
         const d = r(2, 9); const n = r(1, d - 1); const k = r(2, 9); if (gcd(n, d) !== 1) continue;
@@ -583,7 +594,7 @@ const GEN = {
         const [rn, rd] = mul ? reduce(n * k, d) : reduce(n, d * k);
         if (rd === 1) continue;
         const a = fracAns(rn, rd, true);
-        return buildH([fracTok(n, d), { op: mul ? '×' : '÷' }, { n: k }, { op: '＝' }, a], { title: '分数と整数', text: `${n}/${d} ${mul ? '×' : '÷'} ${k}`, answer: a.text, help: mul ? `分子に ${k} をかける` : `分母に ${k} をかける` });
+        return buildH([fracTok(n, d), { op: mul ? '×' : ':' }, { n: k }, { op: '=' }, a], { title: 'Дробь и число', text: `${n}/${d} ${mul ? '×' : ':'} ${k}`, answer: a.text, help: mul ? `числитель × ${k}` : `знаменатель × ${k}` });
       }
       if (op === 'mul' || op === 'div') {
         const d1 = r(2, 9); const n1 = r(1, 9); const d2 = r(2, 9); const n2 = r(1, 9);
@@ -591,13 +602,13 @@ const GEN = {
         const [rn, rd] = op === 'mul' ? reduce(n1 * n2, d1 * d2) : reduce(n1 * d2, d1 * n2);
         if (rd === 1 || rn > 99 || rd > 99) continue;
         const a = fracAns(rn, rd, true);
-        return buildH([fracTok(n1, d1), { op: op === 'mul' ? '×' : '÷' }, fracTok(n2, d2), { op: '＝' }, a], { title: op === 'mul' ? '分数のかけざん' : '分数のわりざん', text: `${n1}/${d1} ${op === 'mul' ? '×' : '÷'} ${n2}/${d2}`, answer: a.text, help: op === 'mul' ? '分母どうし・分子どうしをかける' : `${n2}/${d2} を ひっくりかえして かける` });
+        return buildH([fracTok(n1, d1), { op: op === 'mul' ? '×' : ':' }, fracTok(n2, d2), { op: '=' }, a], { title: op === 'mul' ? 'Умножение дробей' : 'Деление дробей', text: `${n1}/${d1} ${op === 'mul' ? '×' : ':'} ${n2}/${d2}`, answer: a.text, help: op === 'mul' ? 'числитель на числитель, знаменатель на знаменатель' : `умножь на обратную дробь ${d2}/${n2}` });
       }
       if (op === 'decimal') {
         const t = pickOf(rng, [2, 4, 5, 6, 8]); const d = r(2, 9); const n = r(1, d - 1); if (gcd(n, d) !== 1) continue;
         const [rn, rd] = reduce(t * n, 10 * d);
         if (rd === 1 || rn > 99 || rd > 99) continue;
-        return buildH([{ n: decStr(t, 1) }, { op: '×' }, fracTok(n, d), { op: '＝' }, { fa: [rn, rd] }], { title: '小数と分数', text: `${decStr(t, 1)} × ${n}/${d}`, answer: `${rn}/${rd}`, help: `${decStr(t, 1)} ＝ ${t}/10` });
+        return buildH([{ n: decStr(t, 1) }, { op: '×' }, fracTok(n, d), { op: '=' }, { fa: [rn, rd] }], { title: 'Десятичные и обыкновенные', text: `${decStr(t, 1)} × ${n}/${d}`, answer: `${rn}/${rd}`, help: `${decStr(t, 1)} = ${t}/10` });
       }
     }
     throw new Error(`frac ${op}`);
@@ -622,7 +633,7 @@ export function makeProblem(skillId, rng, recent = null) {
 }
 
 function finalize(p) {
-  p.answerText = p.kind === 'h' ? `${p.text} ＝ ${p.answer}` : `${p.text} ＝ ${p.answer}`;
+  p.answerText = `${p.text} = ${p.answer}`;
   return p;
 }
 

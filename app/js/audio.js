@@ -403,7 +403,7 @@ const DRUMS = {
 };
 export const SONGS = {
   chip: {
-    name: '8ビット', prog: [chord(0, [0, 4, 7]), chord(9, [0, 3, 7]), chord(5, [0, 4, 7]), chord(7, [0, 4, 7])],
+    name: '8 бит', prog: [chord(0, [0, 4, 7]), chord(9, [0, 3, 7]), chord(5, [0, 4, 7]), chord(7, [0, 4, 7])],
     hook: [[72, 76, 79, 76, 84, null, 79, 76], [72, 76, 81, 76, 79, null, 76, 72], [77, 81, 84, 81, 79, 77, 76, 74], [79, 83, 86, 83, 84, null, 79, null]],
     step(e, s, bar, t, L, ch, k) {
       if (L <= 7) e.play('tri', t, { m: ch.tones[[0, 1, 2, 1][(s >> 1) % 4]] + 12 + k, dur: e.stepDur * 0.8, v: 0.14 * (1 - L / 9) + 0.03 });
@@ -419,7 +419,7 @@ export const SONGS = {
     },
   },
   matsuri: {
-    name: 'おまつり', prog: [chord(2, [0, 5, 7]), chord(2, [0, 3, 7]), chord(7, [0, 5, 7]), chord(9, [0, 3, 7])],
+    name: 'Японский праздник', prog: [chord(2, [0, 5, 7]), chord(2, [0, 3, 7]), chord(7, [0, 5, 7]), chord(9, [0, 3, 7])],
     hook: [[74, 76, 79, null, 81, 79, 76, 74], [76, 79, 81, 83, 81, null, 79, 76], [79, 81, 83, 86, 83, 81, 79, null], [81, 79, 76, 74, 76, null, 74, null]],
     step(e, s, bar, t, L, ch, k) {
       if (s % 2 === 0 && L <= 7) e.play('shamisen', t, { m: ch.tones[[0, 2, 1, 2, 0, 1, 2, 1][(s >> 1) % 8]] + 12 + k, v: 0.14 * (1 - L / 10) + 0.03, pan: s % 4 ? 0.3 : -0.3 });
@@ -436,7 +436,7 @@ export const SONGS = {
     },
   },
   brass: {
-    name: 'ブラスバンド', prog: [chord(0, [0, 4, 7]), chord(5, [0, 4, 7]), chord(7, [0, 4, 7]), chord(0, [0, 4, 7])],
+    name: 'Духовой оркестр', prog: [chord(0, [0, 4, 7]), chord(5, [0, 4, 7]), chord(7, [0, 4, 7]), chord(0, [0, 4, 7])],
     hook: [[67, null, 72, 74, 76, null, 72, null], [77, null, 76, 74, 72, null, 69, null], [71, 72, 74, 76, 77, 76, 74, 71], [72, null, 76, null, 79, null, 84, null]],
     step(e, s, bar, t, L, ch, k) {
       if (s % 2 === 0 && L <= 7) e.play('glock', t, { m: ch.tones[[0, 1, 2, 1][(s >> 1) % 4]] + 24 + k, v: 0.1 * (1 - L / 9) + 0.03, pan: s % 4 ? 0.3 : -0.3 });
@@ -453,7 +453,7 @@ export const SONGS = {
     },
   },
   electro: {
-    name: 'エレクトロ', prog: [chord(9, [0, 3, 7]), chord(5, [0, 4, 7]), chord(0, [0, 4, 7]), chord(7, [0, 4, 7])],
+    name: 'Электро', prog: [chord(9, [0, 3, 7]), chord(5, [0, 4, 7]), chord(0, [0, 4, 7]), chord(7, [0, 4, 7])],
     hook: [[81, null, 76, 81, 84, null, 83, 81], [77, null, 72, 77, 81, null, 79, 77], [76, null, 72, 76, 79, 81, 79, 76], [79, null, 74, 79, 83, 84, 86, null]],
     step(e, s, bar, t, L, ch, k) {
       if (s % 2 === 0 && L <= 7) e.play('pluck', t, { m: ch.tones[[0, 2, 1, 2][(s >> 1) % 4]] + 12 + k, v: 0.13 * (1 - L / 9) + 0.03, dur: 0.3, pan: s % 4 ? 0.35 : -0.35 });
